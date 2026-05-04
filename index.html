@@ -1,0 +1,1939 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>乐道 L60 用车成本可视化仿真</title>
+  <style>:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-soft: #eef7f5;
+  --ink: #1d2329;
+  --muted: #64717f;
+  --line: #d8dee6;
+  --teal: #0f766e;
+  --blue: #2563eb;
+  --amber: #b45309;
+  --rose: #be123c;
+  --green: #15803d;
+  --shadow: 0 12px 30px rgba(18, 32, 47, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+  letter-spacing: 0;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 92px;
+  padding: 20px 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar h1 {
+  margin: 4px 0 0;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.topbar-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.primary-button,
+.ghost-button {
+  min-height: 36px;
+  border-radius: 6px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.primary-button {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: #fff;
+}
+
+.ghost-button:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+  padding: 18px;
+}
+
+.control-panel,
+.workspace {
+  min-width: 0;
+}
+
+.control-panel {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 12px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+.panel-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: var(--shadow);
+}
+
+.panel-section h2,
+.panel-section summary {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.panel-section summary {
+  cursor: pointer;
+}
+
+.control-row,
+.toggle-row {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.control-label {
+  color: var(--muted);
+}
+
+.control-row input,
+.control-row select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 10px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.control-row input[type="range"] {
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--teal);
+}
+
+.range-control {
+  cursor: pointer;
+}
+
+.range-control::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #dbe5eb;
+}
+
+.range-control::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--teal);
+  box-shadow: 0 2px 7px rgba(15, 118, 110, 0.35);
+  -webkit-appearance: none;
+}
+
+.range-control::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #dbe5eb;
+}
+
+.range-control::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--teal);
+  box-shadow: 0 2px 7px rgba(15, 118, 110, 0.35);
+}
+
+.input-wrap {
+  position: relative;
+  display: block;
+}
+
+.input-wrap input {
+  padding-right: 58px;
+}
+
+.input-wrap em {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  pointer-events: none;
+}
+
+.toggle-row {
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  color: var(--ink);
+}
+
+.toggle-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--teal);
+}
+
+.workspace {
+  display: grid;
+  gap: 14px;
+}
+
+.workspace > *,
+#charts {
+  min-width: 0;
+}
+
+.warning-strip {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid #f5c36c;
+  border-radius: 8px;
+  background: #fff7e6;
+  color: #7a4a00;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.metric-card {
+  min-height: 116px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.metric-card span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.metric-card strong {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.metric-card em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.tabs button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.tabs button.is-active {
+  background: var(--surface-soft);
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.chart-surface,
+.table-zone {
+  margin: 0;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.chart-surface {
+  position: relative;
+  max-width: 100%;
+  overflow: visible;
+  touch-action: pan-x pan-y;
+}
+
+.chart-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  contain: inline-size;
+}
+
+.chart-scroll svg,
+.chart-surface > svg {
+  display: block;
+  width: 100%;
+  min-width: 760px;
+  min-height: 300px;
+}
+
+.chart-title {
+  fill: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.chart-subtitle,
+.axis-labels,
+.legend-item,
+.bar-label,
+.bar-value {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.bar-value {
+  fill: var(--ink);
+}
+
+.grid-lines line {
+  stroke: #e8edf2;
+}
+
+.axis {
+  stroke: #9aa7b4;
+  stroke-width: 1;
+}
+
+.zero-line {
+  stroke: var(--rose);
+  stroke-dasharray: 4 4;
+}
+
+.chart-line {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-hitbox {
+  fill: transparent;
+  pointer-events: all;
+  cursor: crosshair;
+}
+
+.chart-guide {
+  stroke: #334155;
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.chart-focus-layer {
+  pointer-events: none;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  min-height: 34px;
+  padding: 10px 0 0 2px;
+  color: var(--muted);
+  font-size: 14px;
+  border-top: 1px solid #edf1f5;
+}
+
+.chart-legend span,
+.chart-tooltip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.chart-legend i,
+.chart-tooltip i {
+  display: inline-block;
+  width: 22px;
+  height: 4px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.composition-legend i {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+}
+
+.chart-tooltip {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  gap: 6px;
+  min-width: 178px;
+  max-width: min(280px, calc(100% - 16px));
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+  color: var(--ink);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.chart-tooltip strong {
+  font-size: 14px;
+}
+
+.table-zone {
+  display: grid;
+  gap: 14px;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.table-toolbar h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.table-toolbar select {
+  min-height: 36px;
+  max-width: 320px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 10px;
+}
+
+.table-scroll {
+  overflow: auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  contain: inline-size;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  font-size: 13px;
+}
+
+th,
+td {
+  padding: 10px 11px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 700;
+}
+
+tbody tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+.detail-drawer {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.detail-drawer summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.detail-drawer > div {
+  margin-top: 12px;
+}
+
+.formula-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.formula-grid p {
+  margin: 0;
+  padding: 13px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #344254;
+  line-height: 1.65;
+}
+
+a {
+  color: var(--blue);
+  overflow-wrap: anywhere;
+}
+
+#formula-block table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+#formula-block th,
+#formula-block td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .control-panel {
+    position: static;
+    max-height: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 18px;
+  }
+
+  .app-shell {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .control-panel,
+  .metric-grid,
+  .formula-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-grid {
+    gap: 10px;
+  }
+
+  .topbar h1 {
+    font-size: 23px;
+  }
+
+  .topbar-meta,
+  .topbar-meta button {
+    width: 100%;
+  }
+
+  .topbar-meta {
+    justify-content: stretch;
+  }
+
+  .topbar-meta button {
+    flex: 1 1 120px;
+  }
+
+  .metric-card {
+    min-height: 94px;
+  }
+
+  .panel-section,
+  .chart-surface,
+  .table-zone {
+    padding: 12px;
+  }
+
+  .control-row {
+    gap: 8px;
+  }
+
+  .control-row input,
+  .control-row select {
+    min-height: 42px;
+  }
+
+  .control-row input[type="range"] {
+    min-height: 34px;
+  }
+
+  .chart-scroll svg,
+  .chart-surface > svg {
+    min-width: 720px;
+    min-height: 310px;
+  }
+
+  .chart-title {
+    font-size: 16px;
+  }
+
+  .chart-subtitle,
+  .axis-labels,
+  .legend-item,
+  .bar-label,
+  .bar-value {
+    font-size: 11px;
+  }
+
+  .chart-legend {
+    gap: 8px 14px;
+    font-size: 13px;
+  }
+
+  .table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .table-toolbar select {
+    max-width: none;
+  }
+}
+</style>
+</head>
+<body>
+  <script type="application/json" id="default-config">{
+  "dataVersion": "2026-05-04",
+  "modelName": "乐道 L60 标准续航 / 60 kWh",
+  "wholeCarPrice": 206900,
+  "bodyPrice": 149900,
+  "batteryPrice": 57000,
+  "batteryRent": 599,
+  "standardEnergyUse": 11.9,
+  "horizonMonths": 120,
+  "buyoutMonth": 60,
+  "creditStartMonth": 13,
+  "creditEndMonth": 60,
+  "creditPerMonth": 360,
+  "taxPolicy": {
+    "mode": "NEV_2026_2027",
+    "vatDivisor": 1.13,
+    "taxRate": 0.1,
+    "reliefRate": 0.5,
+    "taxReliefCap": 15000
+  },
+  "subsidyPolicy": {
+    "mode": "transfer_old_car",
+    "subsidyReceiveMonth": 1,
+    "replaceSubsidyRate": 0.08,
+    "replaceSubsidyCap": 15000,
+    "scrapSubsidyRate": 0.12,
+    "scrapSubsidyCap": 20000,
+    "customSubsidyYuan": 0
+  },
+  "insurance": {
+    "baasFirstYear": 5300,
+    "buyoutFirstYear": 6950,
+    "afterYear1Factor": 0.7,
+    "switchInsuranceAfterBuyout": true
+  },
+  "investment": {
+    "annualReturn": 0.015,
+    "fundBuyoutPaymentSource": "fund"
+  },
+  "pointRebate": {
+    "pointRebateYuan": 0,
+    "pointRebateMonth": 1,
+    "pointValuationMode": "cash_equivalent",
+    "pointConfidence": "medium"
+  },
+  "rentPromotion": {
+    "useRentPromotion": false,
+    "paidMonthsPerCycle": 4,
+    "cycleMonths": 5,
+    "creditOnlyPaidBills": true
+  },
+  "energy": {
+    "includeEnergyCost": false,
+    "annualMileageKm": 20000,
+    "energyKWhPer100km": 11.9,
+    "electricityPrice": 1
+  },
+  "resale": {
+    "includeResaleValue": false,
+    "resaleValueYuan": 0
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "name": "乐道 L60 官方车型页",
+      "url": "https://www.onvo.cn/l60"
+    },
+    {
+      "id": "S2",
+      "name": "新能源汽车车辆购置税减免政策公告",
+      "url": "https://hq.mof.gov.cn/tongzhitonggao/202307/t20230704_3894319.htm"
+    },
+    {
+      "id": "S3",
+      "name": "2026 年汽车以旧换新补贴实施细则",
+      "url": "https://www.mofcom.gov.cn/zcfb/gnmygl/art/2025/art_56cd7e5f1aae46178d6bade99d0a1a7a.html"
+    },
+    {
+      "id": "S4",
+      "name": "2026 年汽车以旧换新补贴问答手册",
+      "url": "https://www.mofcom.gov.cn/zwgk/zcfb/art/2025/art_3fbdd57f4f1b4ab78c2d9457f3517569.html"
+    }
+  ]
+}</script>
+  <div id="app"></div>
+  <script type="module">const SCENARIOS = [
+  {
+    scenarioId: "S0",
+    scenarioName: "整车买断",
+    purchaseMode: "whole",
+    investmentMode: "no_investment",
+    buyoutMonth: null,
+    buyoutPaymentSource: "external"
+  },
+  {
+    scenarioId: "S1",
+    scenarioName: "BaaS 永不买断 + 银行定额",
+    purchaseMode: "baas",
+    investmentMode: "bank_fixed_principal",
+    buyoutMonth: Infinity,
+    buyoutPaymentSource: "external"
+  },
+  {
+    scenarioId: "S2",
+    scenarioName: "BaaS 永不买断 + 基金扣租",
+    purchaseMode: "baas",
+    investmentMode: "fund_withdraw_rent",
+    buyoutMonth: Infinity,
+    buyoutPaymentSource: "external"
+  },
+  {
+    scenarioId: "S3",
+    scenarioName: "BaaS 第 N 月买断 + 银行定额",
+    purchaseMode: "baas",
+    investmentMode: "bank_fixed_principal",
+    buyoutMonth: "cfg",
+    buyoutPaymentSource: "external"
+  },
+  {
+    scenarioId: "S4",
+    scenarioName: "BaaS 第 N 月买断 + 基金扣租",
+    purchaseMode: "baas",
+    investmentMode: "fund_withdraw_rent",
+    buyoutMonth: "cfg",
+    buyoutPaymentSource: "cfg"
+  }
+];
+
+const MONEY_FIELDS = [
+  "vehicleCost",
+  "tax",
+  "subsidy",
+  "insurance",
+  "rent",
+  "buyout",
+  "pointRebate",
+  "energy",
+  "resaleValue",
+  "nominalCashCost",
+  "cumulativeCashCost",
+  "investmentGain",
+  "fundBalance",
+  "fundTopUp",
+  "netCost",
+  "deltaVsBuyout"
+];
+
+function cloneConfig(cfg) {
+  return JSON.parse(JSON.stringify(cfg));
+}
+
+function normalizeConfig(input) {
+  const cfg = cloneConfig(input);
+  cfg.wholeCarPrice = finiteNumber(cfg.wholeCarPrice, 0);
+  cfg.bodyPrice = finiteNumber(cfg.bodyPrice, 0);
+  cfg.batteryPrice = finiteNumber(cfg.batteryPrice, cfg.wholeCarPrice - cfg.bodyPrice);
+  cfg.batteryRent = finiteNumber(cfg.batteryRent, 0);
+  cfg.horizonMonths = clampInt(cfg.horizonMonths, 1, 360);
+  cfg.buyoutMonth = parseBuyoutMonth(cfg.buyoutMonth, cfg.horizonMonths);
+  cfg.creditStartMonth = clampInt(cfg.creditStartMonth, 1, 360);
+  cfg.creditEndMonth = clampInt(cfg.creditEndMonth, cfg.creditStartMonth, 360);
+  cfg.creditPerMonth = finiteNumber(cfg.creditPerMonth, 0);
+  cfg.taxPolicy = cfg.taxPolicy || {};
+  cfg.subsidyPolicy = cfg.subsidyPolicy || {};
+  cfg.insurance = cfg.insurance || {};
+  cfg.investment = cfg.investment || {};
+  cfg.pointRebate = cfg.pointRebate || {};
+  cfg.rentPromotion = cfg.rentPromotion || {};
+  cfg.energy = cfg.energy || {};
+  cfg.resale = cfg.resale || {};
+  cfg.taxPolicy.vatDivisor = positiveNumber(cfg.taxPolicy.vatDivisor, 1.13);
+  cfg.taxPolicy.taxRate = finiteNumber(cfg.taxPolicy.taxRate, 0.1);
+  cfg.taxPolicy.reliefRate = finiteNumber(cfg.taxPolicy.reliefRate, 0.5);
+  cfg.taxPolicy.taxReliefCap = finiteNumber(cfg.taxPolicy.taxReliefCap, 15000);
+  cfg.subsidyPolicy.subsidyReceiveMonth = clampInt(cfg.subsidyPolicy.subsidyReceiveMonth, 1, 360);
+  cfg.subsidyPolicy.replaceSubsidyRate = finiteNumber(cfg.subsidyPolicy.replaceSubsidyRate, 0.08);
+  cfg.subsidyPolicy.replaceSubsidyCap = finiteNumber(cfg.subsidyPolicy.replaceSubsidyCap, 15000);
+  cfg.subsidyPolicy.scrapSubsidyRate = finiteNumber(cfg.subsidyPolicy.scrapSubsidyRate, 0.12);
+  cfg.subsidyPolicy.scrapSubsidyCap = finiteNumber(cfg.subsidyPolicy.scrapSubsidyCap, 20000);
+  cfg.subsidyPolicy.customSubsidyYuan = finiteNumber(cfg.subsidyPolicy.customSubsidyYuan, 0);
+  cfg.insurance.baasFirstYear = finiteNumber(cfg.insurance.baasFirstYear, 0);
+  cfg.insurance.buyoutFirstYear = finiteNumber(cfg.insurance.buyoutFirstYear, 0);
+  cfg.insurance.afterYear1Factor = finiteNumber(cfg.insurance.afterYear1Factor, 0.7);
+  cfg.insurance.switchInsuranceAfterBuyout = Boolean(cfg.insurance.switchInsuranceAfterBuyout);
+  cfg.investment.annualReturn = Math.max(finiteNumber(cfg.investment.annualReturn, 0), -0.999);
+  cfg.investment.fundBuyoutPaymentSource = cfg.investment.fundBuyoutPaymentSource === "external" ? "external" : "fund";
+  cfg.pointRebate.pointRebateYuan = finiteNumber(cfg.pointRebate.pointRebateYuan, 0);
+  cfg.pointRebate.pointRebateMonth = clampInt(cfg.pointRebate.pointRebateMonth, 1, 360);
+  cfg.rentPromotion.useRentPromotion = Boolean(cfg.rentPromotion.useRentPromotion);
+  cfg.rentPromotion.paidMonthsPerCycle = clampInt(cfg.rentPromotion.paidMonthsPerCycle, 0, 60);
+  cfg.rentPromotion.cycleMonths = clampInt(cfg.rentPromotion.cycleMonths, 1, 60);
+  cfg.rentPromotion.paidMonthsPerCycle = Math.min(cfg.rentPromotion.paidMonthsPerCycle, cfg.rentPromotion.cycleMonths);
+  cfg.rentPromotion.creditOnlyPaidBills = Boolean(cfg.rentPromotion.creditOnlyPaidBills);
+  cfg.energy.includeEnergyCost = Boolean(cfg.energy.includeEnergyCost);
+  cfg.energy.annualMileageKm = finiteNumber(cfg.energy.annualMileageKm, 0);
+  cfg.energy.energyKWhPer100km = finiteNumber(cfg.energy.energyKWhPer100km, 0);
+  cfg.energy.electricityPrice = finiteNumber(cfg.energy.electricityPrice, 0);
+  cfg.resale.includeResaleValue = Boolean(cfg.resale.includeResaleValue);
+  cfg.resale.resaleValueYuan = finiteNumber(cfg.resale.resaleValueYuan, 0);
+  return cfg;
+}
+
+function validateConfig(input) {
+  const cfg = normalizeConfig(input);
+  const warnings = [];
+  if (cfg.wholeCarPrice < cfg.bodyPrice) {
+    warnings.push("整车买断价格低于 BaaS 车价，请确认车价输入。");
+  }
+  if (cfg.batteryPrice !== cfg.wholeCarPrice - cfg.bodyPrice) {
+    warnings.push("电池价格与整车价-BaaS 车价不一致，当前按手动电池价计算。");
+  }
+  if (Number.isFinite(cfg.buyoutMonth) && cfg.buyoutMonth > cfg.horizonMonths) {
+    warnings.push("买断月份超过模拟期，先租后买方案在当前模拟期内不会发生买断。");
+  }
+  if (cfg.rentPromotion.useRentPromotion && cfg.rentPromotion.paidMonthsPerCycle === cfg.rentPromotion.cycleMonths) {
+    warnings.push("租金优惠已启用，但周期内全部月份都付费，等同于无优惠。");
+  }
+  if (cfg.investment.annualReturn < 0) {
+    warnings.push("年化收益率为负，投资收益会增加净成本。");
+  }
+  return { cfg, warnings };
+}
+
+function buildScenarios(cfg) {
+  return SCENARIOS.map((scenario) => {
+    const next = { ...scenario };
+    if (next.buyoutMonth === "cfg") next.buyoutMonth = cfg.buyoutMonth;
+    if (next.buyoutPaymentSource === "cfg") {
+      next.buyoutPaymentSource = cfg.investment.fundBuyoutPaymentSource;
+    }
+    return next;
+  });
+}
+
+function runCostSimulation(input) {
+  const { cfg, warnings } = validateConfig(input);
+  const scenarios = buildScenarios(cfg);
+  const monthlyByScenario = scenarios.map((scenario) => simulateScenario(cfg, scenario));
+  const base = monthlyByScenario[0];
+
+  monthlyByScenario.forEach((rows) => {
+    rows.forEach((row, index) => {
+      row.deltaVsBuyout = roundMoney(row.netCost - base[index].netCost);
+    });
+  });
+
+  const monthlyResult = monthlyByScenario.flat();
+  const summaryResult = summarizeResults(cfg, scenarios, monthlyByScenario);
+  return { cfg, warnings, scenarios, monthlyResult, monthlyByScenario, summaryResult };
+}
+
+function simulateScenario(cfg, scenario) {
+  const rows = [];
+  const T = cfg.horizonMonths;
+  const purchasePrice = scenario.purchaseMode === "whole" ? cfg.wholeCarPrice : cfg.bodyPrice;
+  const monthlyReturn = annualToMonthlyReturn(cfg.investment.annualReturn);
+  let cumulativeCashCost = 0;
+  let fundBalance = scenario.investmentMode === "fund_withdraw_rent" ? cfg.batteryPrice : null;
+  let investmentGain = 0;
+  const buyoutMonth = scenario.buyoutMonth;
+
+  for (let month = 1; month <= T; month += 1) {
+    const hasBuyoutEvent = scenario.purchaseMode === "baas" && Number.isFinite(buyoutMonth) && month === buyoutMonth;
+    const isRenting = scenario.purchaseMode === "baas" && (buyoutMonth === Infinity || month <= buyoutMonth);
+    const vehicleCost = month === 1 ? purchasePrice : 0;
+    const tax = month === 1 ? calcPurchaseTax(purchasePrice, cfg) : 0;
+    const subsidy = month === cfg.subsidyPolicy.subsidyReceiveMonth ? calcSubsidy(purchasePrice, cfg) : 0;
+    const pointRebate = month === cfg.pointRebate.pointRebateMonth ? cfg.pointRebate.pointRebateYuan : 0;
+    const insurance = calcInsuranceForMonth(cfg, scenario, month);
+    const rent = isRenting && isRentBillPaid(cfg, month) ? cfg.batteryRent : 0;
+    const buyout = hasBuyoutEvent ? calcBuyoutDue(cfg, buyoutMonth) : 0;
+    const energy = cfg.energy.includeEnergyCost ? calcMonthlyEnergyCost(cfg) : 0;
+    const resaleValue = cfg.resale.includeResaleValue && month === T ? cfg.resale.resaleValueYuan : 0;
+    const nominalCashCost = vehicleCost + tax + insurance + rent + buyout + energy - subsidy - pointRebate - resaleValue;
+
+    cumulativeCashCost += nominalCashCost;
+
+    let fundTopUp = 0;
+    if (scenario.investmentMode === "bank_fixed_principal") {
+      investmentGain = cfg.batteryPrice * ((1 + monthlyReturn) ** month - 1);
+    } else if (scenario.investmentMode === "fund_withdraw_rent") {
+      const interest = fundBalance * monthlyReturn;
+      investmentGain += interest;
+      fundBalance += interest;
+      let withdrawal = rent;
+      if (buyout > 0 && scenario.buyoutPaymentSource === "fund") withdrawal += buyout;
+      if (withdrawal > fundBalance) {
+        fundTopUp = withdrawal - fundBalance;
+        fundBalance = 0;
+      } else {
+        fundBalance -= withdrawal;
+      }
+    }
+
+    const row = {
+      month,
+      year: Math.ceil(month / 12),
+      scenarioId: scenario.scenarioId,
+      scenarioName: scenario.scenarioName,
+      vehicleCost,
+      tax,
+      subsidy,
+      insurance,
+      rent,
+      buyout,
+      pointRebate,
+      energy,
+      resaleValue,
+      nominalCashCost,
+      cumulativeCashCost,
+      investmentGain,
+      fundBalance: fundBalance === null ? null : fundBalance,
+      fundTopUp,
+      netCost: cumulativeCashCost - investmentGain,
+      deltaVsBuyout: 0
+    };
+    rows.push(roundMoneyFields(row));
+  }
+  return rows;
+}
+
+function summarizeResults(cfg, scenarios, monthlyByScenario) {
+  const summaries = scenarios.map((scenario, index) => {
+    const rows = monthlyByScenario[index];
+    const last = rows[rows.length - 1];
+    const breakEvenRow = scenario.scenarioId === "S0" ? null : rows.find((row) => row.deltaVsBuyout >= 0);
+    const finiteBuyout = Number.isFinite(scenario.buyoutMonth);
+    return {
+      scenarioId: scenario.scenarioId,
+      scenarioName: scenario.scenarioName,
+      finalNominalCashCost: last.cumulativeCashCost,
+      finalNetCost: last.netCost,
+      deltaVsBuyout: last.deltaVsBuyout,
+      breakEvenMonth: breakEvenRow ? breakEvenRow.month : null,
+      buyoutDue: finiteBuyout ? calcBuyoutDue(cfg, scenario.buyoutMonth) : 0,
+      fundEndingBalance: last.fundBalance,
+      fundTopUpTotal: sum(rows.map((row) => row.fundTopUp)),
+      minCostFlag: false
+    };
+  });
+  const minCost = Math.min(...summaries.map((item) => item.finalNetCost));
+  summaries.forEach((summary) => {
+    summary.minCostFlag = Math.abs(summary.finalNetCost - minCost) < 0.005;
+  });
+  return summaries.map(roundMoneyFields);
+}
+
+function calcPurchaseTax(invoiceTaxInclusivePrice, cfg) {
+  const policy = cfg.taxPolicy;
+  const baseTax = invoiceTaxInclusivePrice / policy.vatDivisor * policy.taxRate;
+  const taxRelief = Math.min(baseTax * policy.reliefRate, policy.taxReliefCap);
+  return roundMoney(Math.max(baseTax - taxRelief, 0));
+}
+
+function calcSubsidy(invoiceTaxInclusivePrice, cfg) {
+  const policy = cfg.subsidyPolicy;
+  switch (policy.mode) {
+    case "none":
+      return 0;
+    case "scrap_old_car":
+      return roundMoney(Math.min(invoiceTaxInclusivePrice * policy.scrapSubsidyRate, policy.scrapSubsidyCap));
+    case "custom":
+      return roundMoney(Math.max(policy.customSubsidyYuan, 0));
+    case "transfer_old_car":
+    default:
+      return roundMoney(Math.min(invoiceTaxInclusivePrice * policy.replaceSubsidyRate, policy.replaceSubsidyCap));
+  }
+}
+
+function calcBuyoutDue(cfg, buyoutMonth) {
+  if (!Number.isFinite(buyoutMonth)) return 0;
+  const endMonth = Math.min(buyoutMonth, cfg.creditEndMonth);
+  if (endMonth < cfg.creditStartMonth) return roundMoney(cfg.batteryPrice);
+  let eligibleCount = 0;
+  for (let month = cfg.creditStartMonth; month <= endMonth; month += 1) {
+    if (!cfg.rentPromotion.creditOnlyPaidBills || isRentBillPaid(cfg, month)) eligibleCount += 1;
+  }
+  const credit = cfg.creditPerMonth * eligibleCount;
+  return roundMoney(Math.max(cfg.batteryPrice - credit, 0));
+}
+
+function calcInsuranceForMonth(cfg, scenario, month) {
+  if ((month - 1) % 12 !== 0) return 0;
+  const firstYear = month === 1;
+  let basis = scenario.purchaseMode === "whole" ? "buyout" : "baas";
+  if (
+    scenario.purchaseMode === "baas" &&
+    cfg.insurance.switchInsuranceAfterBuyout &&
+    Number.isFinite(scenario.buyoutMonth) &&
+    scenario.buyoutMonth < month
+  ) {
+    basis = "buyout";
+  }
+  const base = basis === "buyout" ? cfg.insurance.buyoutFirstYear : cfg.insurance.baasFirstYear;
+  return roundMoney(firstYear ? base : base * cfg.insurance.afterYear1Factor);
+}
+
+function isRentBillPaid(cfg, month) {
+  if (!cfg.rentPromotion.useRentPromotion) return true;
+  const cycleMonth = ((month - 1) % cfg.rentPromotion.cycleMonths) + 1;
+  return cycleMonth <= cfg.rentPromotion.paidMonthsPerCycle;
+}
+
+function calcMonthlyEnergyCost(cfg) {
+  const monthlyKm = cfg.energy.annualMileageKm / 12;
+  return roundMoney(monthlyKm * cfg.energy.energyKWhPer100km / 100 * cfg.energy.electricityPrice);
+}
+
+function annualToMonthlyReturn(annualReturn) {
+  return (1 + annualReturn) ** (1 / 12) - 1;
+}
+
+function toCsv(rows) {
+  if (!rows.length) return "";
+  const headers = Object.keys(rows[0]);
+  const lines = [headers.join(",")];
+  rows.forEach((row) => {
+    lines.push(headers.map((header) => csvCell(row[header])).join(","));
+  });
+  return lines.join("\n");
+}
+
+function csvCell(value) {
+  if (value === null || value === undefined) return "";
+  const text = String(value);
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function finiteNumber(value, fallback) {
+  const next = Number(value);
+  return Number.isFinite(next) ? next : fallback;
+}
+
+function positiveNumber(value, fallback) {
+  const next = Number(value);
+  return Number.isFinite(next) && next > 0 ? next : fallback;
+}
+
+function clampInt(value, min, max) {
+  const next = Math.round(Number(value));
+  if (!Number.isFinite(next)) return min;
+  return Math.max(min, Math.min(max, next));
+}
+
+function parseBuyoutMonth(value, horizonMonths) {
+  if (value === Infinity || value === "Inf" || value === "Infinity" || value === null) return Infinity;
+  return clampInt(value, 1, Math.max(horizonMonths, 1));
+}
+
+function roundMoney(value) {
+  if (value === null || value === undefined) return value;
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function roundMoneyFields(row) {
+  const next = { ...row };
+  MONEY_FIELDS.forEach((field) => {
+    if (Object.hasOwn(next, field) && next[field] !== null) next[field] = roundMoney(next[field]);
+  });
+  return next;
+}
+
+function sum(values) {
+  return roundMoney(values.reduce((acc, value) => acc + (Number(value) || 0), 0));
+}
+
+
+const SERIES_COLORS = ["#0f766e", "#2563eb", "#b45309", "#be123c", "#6d28d9", "#0f172a"];
+const COMPONENT_COLORS = {
+  vehicleCost: "#0f766e",
+  tax: "#2563eb",
+  insurance: "#7c3aed",
+  rent: "#d97706",
+  buyout: "#be123c",
+  energy: "#0891b2",
+  subsidy: "#16a34a",
+  pointRebate: "#65a30d",
+  investmentGain: "#475569"
+};
+
+function renderLineChart({ title, subtitle = "", series, yFormatter = formatWan, zeroLine = false }) {
+  const width = 920;
+  const height = 360;
+  const margin = { top: 46, right: 34, bottom: 54, left: 76 };
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const allPoints = series.flatMap((item) => item.values.map((point) => point.y));
+  const allMonths = series.flatMap((item) => item.values.map((point) => point.x));
+  const xMin = Math.min(...allMonths, 1);
+  const xMax = Math.max(...allMonths, 12);
+  let yMin = Math.min(...allPoints, zeroLine ? 0 : Infinity);
+  let yMax = Math.max(...allPoints, zeroLine ? 0 : -Infinity);
+  if (Math.abs(yMax - yMin) < 1) {
+    yMax += 1;
+    yMin -= 1;
+  }
+  const yPad = (yMax - yMin) * 0.08;
+  yMax += yPad;
+  yMin -= yPad;
+
+  const x = (value) => margin.left + ((value - xMin) / Math.max(1, xMax - xMin)) * plotWidth;
+  const y = (value) => margin.top + (1 - (value - yMin) / (yMax - yMin)) * plotHeight;
+  const yTicks = buildTicks(yMin, yMax, 5);
+  const xTicks = buildMonthTicks(xMin, xMax);
+
+  const lines = series.map((item, index) => {
+    const points = item.values.map((point) => `${x(point.x).toFixed(1)},${y(point.y).toFixed(1)}`).join(" ");
+    const color = item.color || SERIES_COLORS[index % SERIES_COLORS.length];
+    return `<polyline class="chart-line" points="${points}" fill="none" stroke="${color}" stroke-width="2.6" vector-effect="non-scaling-stroke"></polyline>`;
+  }).join("");
+
+  const legend = series.map((item, index) => {
+    const color = item.color || SERIES_COLORS[index % SERIES_COLORS.length];
+    return `<span><i style="background:${color}"></i>${escapeSvg(item.name)}</span>`;
+  }).join("");
+
+  const zero = zeroLine && yMin < 0 && yMax > 0
+    ? `<line class="zero-line" x1="${margin.left}" x2="${width - margin.right}" y1="${y(0)}" y2="${y(0)}"></line>`
+    : "";
+
+  const tooltipPayload = escapeSvgAttr(JSON.stringify({
+    width,
+    height,
+    margin,
+    xMin,
+    xMax,
+    yMin,
+    yMax,
+    series: series.map((item, index) => ({
+      name: item.name,
+      color: item.color || SERIES_COLORS[index % SERIES_COLORS.length],
+      values: item.values
+    }))
+  }));
+
+  return `<figure class="chart-surface js-line-chart" data-tooltip-payload="${tooltipPayload}">
+    <div class="chart-scroll">
+    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeSvgAttr(title)}">
+      <text class="chart-title" x="${margin.left}" y="25">${escapeSvg(title)}</text>
+      ${subtitle ? `<text class="chart-subtitle" x="${margin.left}" y="43">${escapeSvg(subtitle)}</text>` : ""}
+      <g class="grid-lines">
+        ${yTicks.map((tick) => `<line x1="${margin.left}" x2="${width - margin.right}" y1="${y(tick)}" y2="${y(tick)}"></line>`).join("")}
+      </g>
+      ${zero}
+      <g class="axis-labels">
+        ${yTicks.map((tick) => `<text x="${margin.left - 12}" y="${y(tick) + 4}" text-anchor="end">${escapeSvg(yFormatter(tick))}</text>`).join("")}
+        ${xTicks.map((tick) => `<text x="${x(tick)}" y="${height - margin.bottom + 26}" text-anchor="middle">${tick}</text>`).join("")}
+      </g>
+      <line class="axis" x1="${margin.left}" x2="${width - margin.right}" y1="${height - margin.bottom}" y2="${height - margin.bottom}"></line>
+      <line class="axis" x1="${margin.left}" x2="${margin.left}" y1="${margin.top}" y2="${height - margin.bottom}"></line>
+      ${lines}
+      <rect class="chart-hitbox" x="${margin.left}" y="${margin.top}" width="${plotWidth}" height="${plotHeight}"></rect>
+    </svg>
+    </div>
+    <figcaption class="chart-legend">${legend}</figcaption>
+    <div class="chart-tooltip" hidden></div>
+  </figure>`;
+}
+
+function renderBuyoutCurve(cfg, calcBuyoutDue) {
+  const values = [];
+  const end = Math.max(cfg.horizonMonths, cfg.creditEndMonth + 12);
+  for (let month = 1; month <= end; month += 1) {
+    values.push({ x: month, y: calcBuyoutDue(cfg, month) });
+  }
+  return renderLineChart({
+    title: "买断应付金额曲线",
+    subtitle: `第 ${cfg.creditStartMonth}-${cfg.creditEndMonth} 月抵扣，默认每月 ${cfg.creditPerMonth} 元`,
+    series: [{ name: "买断应付", values, color: "#be123c" }],
+    yFormatter: formatWan
+  });
+}
+
+function renderCompositionChart(monthlyResult) {
+  const width = 920;
+  const height = 430;
+  const margin = { top: 58, right: 118, bottom: 34, left: 92 };
+  const components = [
+    ["vehicleCost", "车价"],
+    ["tax", "购置税"],
+    ["insurance", "保险"],
+    ["rent", "租金"],
+    ["buyout", "买断款"],
+    ["energy", "补能"],
+    ["subsidy", "补贴"],
+    ["pointRebate", "积分"],
+    ["investmentGain", "投资收益"]
+  ];
+  const grouped = groupByScenario(monthlyResult);
+  const scenarioIds = Object.keys(grouped);
+  const data = scenarioIds.map((id) => {
+    const rows = grouped[id];
+    const item = { scenarioId: id, scenarioName: rows[0].scenarioName };
+    components.forEach(([key]) => {
+      if (key === "investmentGain") {
+        item[key] = rows[rows.length - 1].investmentGain;
+      } else {
+        item[key] = rows.reduce((acc, row) => acc + (Number(row[key]) || 0), 0);
+      }
+    });
+    return item;
+  });
+  const maxValue = Math.max(...data.map((item) => {
+    const positive = components
+      .filter(([key]) => !["subsidy", "pointRebate", "investmentGain"].includes(key))
+      .reduce((acc, [key]) => acc + Math.max(0, item[key]), 0);
+    const negative = item.subsidy + item.pointRebate + item.investmentGain;
+    return Math.max(positive, negative);
+  }), 1);
+  const plotWidth = width - margin.left - margin.right;
+  const barHeight = 34;
+  const gap = 34;
+  const x = (value) => margin.left + (value / maxValue) * plotWidth;
+  const baseY = margin.top + 24;
+  const bars = data.map((item, rowIndex) => {
+    const y = baseY + rowIndex * (barHeight + gap);
+    let cursor = margin.left;
+    const positiveSegments = components.filter(([key]) => !["subsidy", "pointRebate", "investmentGain"].includes(key) && item[key] > 0);
+    const negativeSegments = components.filter(([key]) => ["subsidy", "pointRebate", "investmentGain"].includes(key) && item[key] > 0);
+    const positive = positiveSegments.map(([key, label]) => {
+      const w = x(item[key]) - margin.left;
+      const rect = `<rect x="${cursor}" y="${y}" width="${Math.max(0, w)}" height="${barHeight}" fill="${COMPONENT_COLORS[key]}"><title>${label} ${formatYuan(item[key])}</title></rect>`;
+      cursor += w;
+      return rect;
+    }).join("");
+    let savingCursor = margin.left;
+    const savings = negativeSegments.map(([key, label]) => {
+      const w = x(item[key]) - margin.left;
+      const rect = `<rect x="${savingCursor}" y="${y + barHeight + 4}" width="${Math.max(0, w)}" height="9" fill="${COMPONENT_COLORS[key]}"><title>${label}抵减 ${formatYuan(item[key])}</title></rect>`;
+      savingCursor += w;
+      return rect;
+    }).join("");
+    const valueLabelX = Math.min(cursor + 10, width - margin.right + 14);
+    return `<g>
+      <text class="bar-label" x="${margin.left - 12}" y="${y + 22}" text-anchor="end">${escapeSvg(item.scenarioId)}</text>
+      ${positive}
+      ${savings}
+      <text class="bar-value" x="${valueLabelX}" y="${y + 22}">${escapeSvg(formatWan(cursorValue(cursor, margin.left, plotWidth, maxValue)))}</text>
+    </g>`;
+  }).join("");
+  const legend = components.map(([key, label], index) => {
+    return `<span><i style="background:${COMPONENT_COLORS[key]}"></i>${escapeSvg(label)}</span>`;
+  }).join("");
+  return `<figure class="chart-surface">
+    <div class="chart-scroll">
+    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="成本构成图">
+      <text class="chart-title" x="${margin.left}" y="27">成本构成图</text>
+      <text class="chart-subtitle" x="${margin.left}" y="46">粗条为支出，细条为补贴、积分和投资收益抵减</text>
+      <line class="axis" x1="${margin.left}" x2="${width - margin.right}" y1="${margin.top}" y2="${margin.top}"></line>
+      ${bars}
+    </svg>
+    </div>
+    <figcaption class="chart-legend composition-legend">${legend}</figcaption>
+  </figure>`;
+}
+
+function buildSeries(monthlyResult, yField, filter = () => true) {
+  const grouped = groupByScenario(monthlyResult.filter(filter));
+  return Object.values(grouped).map((rows, index) => ({
+    name: rows[0].scenarioId,
+    color: SERIES_COLORS[index % SERIES_COLORS.length],
+    values: rows.map((row) => ({ x: row.month, y: row[yField] || 0 }))
+  }));
+}
+
+function enhanceLineChartTooltips(scope = document) {
+  scope.querySelectorAll(".js-line-chart").forEach((chart) => {
+    if (chart.dataset.tooltipReady === "true") return;
+    chart.dataset.tooltipReady = "true";
+    const svg = chart.querySelector("svg");
+    const tooltip = chart.querySelector(".chart-tooltip");
+    const payload = JSON.parse(chart.dataset.tooltipPayload);
+    const guide = svgEl("line", { class: "chart-guide", y1: payload.margin.top, y2: payload.height - payload.margin.bottom });
+    const focusLayer = svgEl("g", { class: "chart-focus-layer" });
+    const hitbox = svg.querySelector(".chart-hitbox");
+    svg.insertBefore(guide, hitbox);
+    svg.insertBefore(focusLayer, hitbox);
+    guide.setAttribute("hidden", "");
+    focusLayer.setAttribute("hidden", "");
+
+    const circles = payload.series.map((item) => {
+      const circle = svgEl("circle", { r: 4.5, fill: item.color, stroke: "#fff", "stroke-width": 2 });
+      focusLayer.append(circle);
+      return circle;
+    });
+
+    const move = (event) => {
+      const point = svgPoint(svg, event);
+      const clampedX = Math.max(payload.margin.left, Math.min(payload.width - payload.margin.right, point.x));
+      const rawMonth = payload.xMin + (clampedX - payload.margin.left) / (payload.width - payload.margin.left - payload.margin.right) * (payload.xMax - payload.xMin);
+      const month = nearestMonth(payload.series[0]?.values || [], rawMonth);
+      const x = scaleX(payload, month);
+      const rows = payload.series.map((item, index) => {
+        const valuePoint = nearestPoint(item.values, month);
+        const y = scaleY(payload, valuePoint.y);
+        circles[index].setAttribute("cx", x);
+        circles[index].setAttribute("cy", y);
+        return { name: item.name, color: item.color, value: valuePoint.y };
+      });
+
+      guide.removeAttribute("hidden");
+      focusLayer.removeAttribute("hidden");
+      guide.setAttribute("x1", x);
+      guide.setAttribute("x2", x);
+      tooltip.hidden = false;
+      tooltip.innerHTML = `<strong>第 ${month} 月</strong>${rows.map((row) => (
+        `<span><i style="background:${row.color}"></i>${escapeChartHtml(row.name)}：${formatYuan(row.value)}</span>`
+      )).join("")}`;
+
+      const chartRect = chart.getBoundingClientRect();
+      const localX = event.clientX - chartRect.left;
+      const localY = event.clientY - chartRect.top;
+      const tooltipWidth = tooltip.offsetWidth || 180;
+      const tooltipHeight = tooltip.offsetHeight || 120;
+      const left = Math.max(8, Math.min(chartRect.width - tooltipWidth - 8, localX + 14));
+      const top = Math.max(8, Math.min(chartRect.height - tooltipHeight - 8, localY - tooltipHeight - 12));
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+    };
+
+    const leave = () => {
+      guide.setAttribute("hidden", "");
+      focusLayer.setAttribute("hidden", "");
+      tooltip.hidden = true;
+    };
+
+    hitbox.addEventListener("pointermove", move);
+    hitbox.addEventListener("pointerenter", move);
+    hitbox.addEventListener("pointerleave", leave);
+    hitbox.addEventListener("pointercancel", leave);
+  });
+}
+
+function groupByScenario(rows) {
+  return rows.reduce((acc, row) => {
+    if (!acc[row.scenarioId]) acc[row.scenarioId] = [];
+    acc[row.scenarioId].push(row);
+    return acc;
+  }, {});
+}
+
+function formatYuan(value) {
+  return `${Math.round(value).toLocaleString("zh-CN")} 元`;
+}
+
+function formatWan(value) {
+  return `${(value / 10000).toFixed(1)} 万`;
+}
+
+function buildTicks(min, max, count) {
+  const step = (max - min) / Math.max(1, count - 1);
+  return Array.from({ length: count }, (_, index) => min + step * index);
+}
+
+function buildMonthTicks(min, max) {
+  const ticks = [];
+  const span = max - min;
+  const step = span <= 36 ? 6 : 12;
+  for (let value = Math.ceil(min / step) * step; value <= max; value += step) {
+    ticks.push(value);
+  }
+  if (!ticks.includes(1)) ticks.unshift(1);
+  return ticks;
+}
+
+function cursorValue(cursor, start, width, maxValue) {
+  return ((cursor - start) / Math.max(1, width)) * maxValue;
+}
+
+function escapeSvg(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function escapeSvgAttr(value) {
+  return escapeSvg(value).replaceAll('"', "&quot;");
+}
+
+function escapeChartHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function svgEl(name, attrs) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+  return node;
+}
+
+function svgPoint(svg, event) {
+  const rect = svg.getBoundingClientRect();
+  const viewBox = svg.viewBox.baseVal;
+  return {
+    x: viewBox.x + (event.clientX - rect.left) * viewBox.width / rect.width,
+    y: viewBox.y + (event.clientY - rect.top) * viewBox.height / rect.height
+  };
+}
+
+function nearestMonth(values, rawMonth) {
+  if (!values.length) return Math.round(rawMonth);
+  return nearestPoint(values, rawMonth).x;
+}
+
+function nearestPoint(values, month) {
+  return values.reduce((best, point) => (
+    Math.abs(point.x - month) < Math.abs(best.x - month) ? point : best
+  ), values[0]);
+}
+
+function scaleX(payload, month) {
+  const plotWidth = payload.width - payload.margin.left - payload.margin.right;
+  return payload.margin.left + ((month - payload.xMin) / Math.max(1, payload.xMax - payload.xMin)) * plotWidth;
+}
+
+function scaleY(payload, value) {
+  const plotHeight = payload.height - payload.margin.top - payload.margin.bottom;
+  return payload.margin.top + (1 - (value - payload.yMin) / (payload.yMax - payload.yMin)) * plotHeight;
+}
+
+
+
+
+const DEFAULT_CONFIG = JSON.parse(document.getElementById("default-config").textContent);
+const root = document.getElementById("app");
+let cfg = cloneConfig(DEFAULT_CONFIG);
+let activeChart = "cost";
+let activeTableScenario = "S0";
+
+renderShell();
+bindEvents();
+syncControls();
+recalculate();
+
+function renderShell() {
+  root.innerHTML = `
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">ONVO L60 TCO SIMULATOR</p>
+        <h1>乐道 L60 买断 / 租电成本仿真</h1>
+      </div>
+      <div class="topbar-meta">
+        <span>数据核验 ${escapeHtml(DEFAULT_CONFIG.dataVersion)}</span>
+        <button type="button" class="ghost-button" id="export-json">导出 JSON</button>
+        <button type="button" class="ghost-button" id="export-csv">导出 CSV</button>
+        <button type="button" class="primary-button" id="reset-config">重置参数</button>
+      </div>
+    </header>
+    <main class="app-shell">
+      <aside class="control-panel">
+        <section class="panel-section">
+          <h2>基础参数</h2>
+          ${numberControl("整车买断价", "wholeCarPrice", 100000, 350000, 100, "元")}
+          ${numberControl("BaaS 车价", "bodyPrice", 80000, 300000, 100, "元")}
+          ${numberControl("电池价格", "batteryPrice", 10000, 150000, 100, "元")}
+          ${numberControl("电池月租", "batteryRent", 0, 2000, 1, "元/月")}
+          ${numberControl("模拟月份", "horizonMonths", 12, 240, 1, "月")}
+          ${numberControl("买断月份", "buyoutMonth", 1, 120, 1, "月", { maxPath: "horizonMonths" })}
+        </section>
+        <section class="panel-section">
+          <h2>抵扣与补贴</h2>
+          ${numberControl("抵扣开始月", "creditStartMonth", 1, 120, 1, "月")}
+          ${numberControl("抵扣结束月", "creditEndMonth", 1, 120, 1, "月")}
+          ${numberControl("每月抵扣", "creditPerMonth", 0, 1500, 1, "元")}
+          ${selectControl("补贴模式", "subsidyPolicy.mode", [
+            ["none", "无补贴"],
+            ["transfer_old_car", "置换更新"],
+            ["scrap_old_car", "报废更新"],
+            ["custom", "自定义"]
+          ])}
+          ${numberControl("补贴到账月", "subsidyPolicy.subsidyReceiveMonth", 1, 120, 1, "月")}
+          ${numberControl("自定义补贴", "subsidyPolicy.customSubsidyYuan", 0, 50000, 100, "元")}
+          ${numberControl("积分现金等价", "pointRebate.pointRebateYuan", 0, 50000, 100, "元")}
+          ${numberControl("积分抵扣月", "pointRebate.pointRebateMonth", 1, 120, 1, "月")}
+        </section>
+        <section class="panel-section">
+          <h2>保险与投资</h2>
+          ${numberControl("BaaS 首年保险", "insurance.baasFirstYear", 0, 20000, 100, "元")}
+          ${numberControl("买断首年保险", "insurance.buyoutFirstYear", 0, 20000, 100, "元")}
+          ${numberControl("续保折扣", "insurance.afterYear1Factor", 0, 1.5, 0.01, "")}
+          ${checkboxControl("买断后切换保险口径", "insurance.switchInsuranceAfterBuyout")}
+          ${numberControl("年化收益率", "investment.annualReturn", -0.2, 0.2, 0.001, "")}
+          ${selectControl("S4 买断款来源", "investment.fundBuyoutPaymentSource", [
+            ["fund", "基金账户"],
+            ["external", "外部支付"]
+          ])}
+        </section>
+        <details class="panel-section" open>
+          <summary>高级参数</summary>
+          ${checkboxControl("启用租金优惠", "rentPromotion.useRentPromotion")}
+          ${numberControl("周期内付费月", "rentPromotion.paidMonthsPerCycle", 0, 12, 1, "月")}
+          ${numberControl("优惠周期", "rentPromotion.cycleMonths", 1, 12, 1, "月")}
+          ${checkboxControl("抵扣只按付费账单", "rentPromotion.creditOnlyPaidBills")}
+          ${checkboxControl("纳入补能成本", "energy.includeEnergyCost")}
+          ${numberControl("年行驶里程", "energy.annualMileageKm", 0, 50000, 500, "km")}
+          ${numberControl("百公里电耗", "energy.energyKWhPer100km", 0, 30, 0.1, "kWh")}
+          ${numberControl("电价", "energy.electricityPrice", 0, 3, 0.01, "元/kWh")}
+          ${checkboxControl("纳入期末残值", "resale.includeResaleValue")}
+          ${numberControl("期末残值", "resale.resaleValueYuan", 0, 300000, 1000, "元")}
+        </details>
+      </aside>
+      <section class="workspace">
+        <div id="warnings"></div>
+        <section class="metric-grid" id="metrics"></section>
+        <nav class="tabs" aria-label="图表">
+          ${tabButton("cost", "净成本")}
+          ${tabButton("delta", "相对差额")}
+          ${tabButton("buyout", "买断金额")}
+          ${tabButton("fund", "基金余额")}
+          ${tabButton("composition", "成本构成")}
+        </nav>
+        <section id="charts"></section>
+        <section class="table-zone">
+          <div class="table-toolbar">
+            <h2>结果明细</h2>
+            <select id="scenario-filter" aria-label="逐月明细方案"></select>
+          </div>
+          <div id="summary-table"></div>
+          <details class="detail-drawer">
+            <summary>逐月明细表</summary>
+            <div id="monthly-table"></div>
+          </details>
+          <details class="detail-drawer">
+            <summary>公式与来源</summary>
+            <div id="formula-block"></div>
+          </details>
+        </section>
+      </section>
+    </main>`;
+}
+
+function bindEvents() {
+  root.addEventListener("input", (event) => {
+    if (!event.target.matches("[data-path]")) return;
+    updateControlValue(event.target);
+    recalculate();
+  });
+  root.addEventListener("change", (event) => {
+    if (event.target.matches("[data-path]")) {
+      updateControlValue(event.target);
+      recalculate();
+    }
+    if (event.target.id === "scenario-filter") {
+      activeTableScenario = event.target.value;
+      recalculate();
+    }
+  });
+  root.addEventListener("click", (event) => {
+    const chartButton = event.target.closest("[data-chart-tab]");
+    if (chartButton) {
+      activeChart = chartButton.dataset.chartTab;
+      updateTabState();
+      recalculate();
+    }
+    if (event.target.id === "reset-config") {
+      cfg = cloneConfig(DEFAULT_CONFIG);
+      activeTableScenario = "S0";
+      syncControls();
+      recalculate();
+    }
+    if (event.target.id === "export-json") {
+      const result = runCostSimulation(cfg);
+      downloadText("onvo_l60_cost_results.json", JSON.stringify({
+        cfg: result.cfg,
+        summaryResult: result.summaryResult,
+        monthlyResult: result.monthlyResult
+      }, null, 2), "application/json");
+    }
+    if (event.target.id === "export-csv") {
+      const result = runCostSimulation(cfg);
+      downloadText("onvo_l60_monthly_results.csv", "\ufeff" + toCsv(result.monthlyResult), "text/csv;charset=utf-8");
+    }
+  });
+}
+
+function recalculate() {
+  const result = runCostSimulation(cfg);
+  cfg = result.cfg;
+  syncControls();
+  updateTabState();
+  renderWarnings(result.warnings);
+  renderMetrics(result);
+  renderCharts(result);
+  renderTables(result);
+  renderFormulaBlock(result.cfg);
+}
+
+function renderWarnings(warnings) {
+  const el = document.getElementById("warnings");
+  el.innerHTML = warnings.length
+    ? `<div class="warning-strip">${warnings.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`
+    : "";
+}
+
+function renderMetrics(result) {
+  const { cfg: currentCfg, summaryResult, monthlyByScenario } = result;
+  const min = summaryResult.find((item) => item.minCostFlag);
+  const s0m1 = monthlyByScenario[0][0].cumulativeCashCost;
+  const s1m1 = monthlyByScenario[1][0].cumulativeCashCost;
+  const s1 = summaryResult.find((item) => item.scenarioId === "S1");
+  const s4 = summaryResult.find((item) => item.scenarioId === "S4");
+  const buyoutDue = calcBuyoutDue(currentCfg, currentCfg.buyoutMonth);
+  document.getElementById("metrics").innerHTML = [
+    metricCard("最低成本方案", min.scenarioName, formatYuan(min.finalNetCost)),
+    metricCard("租电初始节省", formatYuan(s0m1 - s1m1), "第 1 月现金口径"),
+    metricCard("S1 盈亏平衡", s1.breakEvenMonth ? `第 ${s1.breakEvenMonth} 月` : "未达到", "相对整车买断"),
+    metricCard("指定月买断应付", formatYuan(buyoutDue), `第 ${currentCfg.buyoutMonth} 月末`),
+    metricCard("S4 期末基金余额", s4.fundEndingBalance === null ? "无" : formatYuan(s4.fundEndingBalance), s4.fundTopUpTotal ? `补足 ${formatYuan(s4.fundTopUpTotal)}` : "未触发补足")
+  ].join("");
+}
+
+function renderCharts(result) {
+  const chartHost = document.getElementById("charts");
+  if (activeChart === "cost") {
+    chartHost.innerHTML = renderLineChart({
+      title: "逐月累计净成本曲线",
+      subtitle: "净成本 = 累计现金成本 - 投资收益",
+      series: buildSeries(result.monthlyResult, "netCost")
+    });
+  } else if (activeChart === "delta") {
+    chartHost.innerHTML = renderLineChart({
+      title: "相对整车买断差额曲线",
+      subtitle: "差额小于 0 表示低于整车买断",
+      series: buildSeries(result.monthlyResult, "deltaVsBuyout", (row) => row.scenarioId !== "S0"),
+      zeroLine: true
+    });
+  } else if (activeChart === "buyout") {
+    chartHost.innerHTML = renderBuyoutCurve(result.cfg, calcBuyoutDue);
+  } else if (activeChart === "fund") {
+    chartHost.innerHTML = renderLineChart({
+      title: "投资账户余额曲线",
+      subtitle: "仅展示基金扣租方案",
+      series: buildSeries(result.monthlyResult, "fundBalance", (row) => row.scenarioId === "S2" || row.scenarioId === "S4"),
+      zeroLine: true
+    });
+  } else {
+    chartHost.innerHTML = renderCompositionChart(result.monthlyResult);
+  }
+  enhanceLineChartTooltips(chartHost);
+}
+
+function renderTables(result) {
+  const filter = document.getElementById("scenario-filter");
+  filter.innerHTML = result.summaryResult.map((item) => (
+    `<option value="${item.scenarioId}" ${item.scenarioId === activeTableScenario ? "selected" : ""}>${item.scenarioId} ${escapeHtml(item.scenarioName)}</option>`
+  )).join("");
+  document.getElementById("summary-table").innerHTML = tableHtml([
+    "方案",
+    "名义支出",
+    "净成本",
+    "相对买断",
+    "盈亏平衡",
+    "买断应付",
+    "基金余额"
+  ], result.summaryResult.map((row) => [
+    `${row.scenarioId} ${row.scenarioName}${row.minCostFlag ? " *" : ""}`,
+    formatYuan(row.finalNominalCashCost),
+    formatYuan(row.finalNetCost),
+    formatYuan(row.deltaVsBuyout),
+    row.breakEvenMonth ? `第 ${row.breakEvenMonth} 月` : "",
+    row.buyoutDue ? formatYuan(row.buyoutDue) : "",
+    row.fundEndingBalance === null ? "" : formatYuan(row.fundEndingBalance)
+  ]));
+  const rows = result.monthlyResult.filter((row) => row.scenarioId === activeTableScenario);
+  document.getElementById("monthly-table").innerHTML = tableHtml([
+    "月",
+    "车价",
+    "税",
+    "保险",
+    "租金",
+    "买断",
+    "补贴",
+    "投资收益",
+    "基金余额",
+    "净成本"
+  ], rows.map((row) => [
+    row.month,
+    formatYuan(row.vehicleCost),
+    formatYuan(row.tax),
+    formatYuan(row.insurance),
+    formatYuan(row.rent),
+    formatYuan(row.buyout),
+    formatYuan(row.subsidy + row.pointRebate),
+    formatYuan(row.investmentGain),
+    row.fundBalance === null ? "" : formatYuan(row.fundBalance),
+    formatYuan(row.netCost)
+  ]));
+}
+
+function renderFormulaBlock(currentCfg) {
+  const sourceRows = (currentCfg.sources || []).map((source) => [
+    source.id,
+    source.name,
+    `<a href="${escapeAttr(source.url)}">${escapeHtml(source.url)}</a>`
+  ]);
+  document.getElementById("formula-block").innerHTML = `
+    <div class="formula-grid">
+      <p><strong>购置税</strong>：购车价 / ${currentCfg.taxPolicy.vatDivisor} × ${(currentCfg.taxPolicy.taxRate * 100).toFixed(1)}%，再按 ${(currentCfg.taxPolicy.reliefRate * 100).toFixed(1)}% 减免，单车减税额封顶 ${formatYuan(currentCfg.taxPolicy.taxReliefCap)}。</p>
+      <p><strong>买断抵扣</strong>：第 ${currentCfg.creditStartMonth}-${currentCfg.creditEndMonth} 月按 ${formatYuan(currentCfg.creditPerMonth)} / 月累计抵扣，买断款不低于 0。</p>
+      <p><strong>投资收益</strong>：月收益率 = (1 + 年化收益率)<sup>1/12</sup> - 1；基金扣租方案先计收益，再扣当月租金和可选买断款。</p>
+      <p><strong>免责声明</strong>：本工具输出为给定参数下的模拟结果，不构成购车、税务或投资建议。</p>
+    </div>
+    ${tableHtml(["编号", "资料", "链接"], sourceRows)}
+  `;
+}
+
+function syncControls() {
+  root.querySelectorAll("[data-path]").forEach((control) => {
+    if (control.dataset.maxPath) {
+      control.max = getByPath(cfg, control.dataset.maxPath);
+    }
+    const value = getByPath(cfg, control.dataset.path);
+    if (control.type === "checkbox") {
+      control.checked = Boolean(value);
+    } else {
+      control.value = value;
+    }
+  });
+}
+
+function updateControlValue(control) {
+  const path = control.dataset.path;
+  const value = control.type === "checkbox"
+    ? control.checked
+    : control.type === "number" || control.type === "range"
+      ? Number(control.value)
+      : control.value;
+  setByPath(cfg, path, value);
+  root.querySelectorAll(`[data-path="${cssEscape(path)}"]`).forEach((peer) => {
+    if (peer === control) return;
+    if (peer.type === "checkbox") {
+      peer.checked = Boolean(value);
+    } else {
+      peer.value = value;
+    }
+  });
+}
+
+function updateTabState() {
+  root.querySelectorAll("[data-chart-tab]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.chartTab === activeChart);
+  });
+}
+
+function numberControl(label, path, min, max, step, suffix, options = {}) {
+  const maxAttr = options.maxPath
+    ? `data-max-path="${escapeAttr(options.maxPath)}"`
+    : `max="${max}"`;
+  return `<label class="control-row">
+    <span class="control-label">${escapeHtml(label)}</span>
+    <span class="input-wrap">
+      <input data-path="${escapeAttr(path)}" type="number" min="${min}" ${maxAttr} step="${step}" inputmode="decimal">
+      ${suffix ? `<em>${escapeHtml(suffix)}</em>` : ""}
+    </span>
+    <input class="range-control" data-path="${escapeAttr(path)}" type="range" min="${min}" ${maxAttr} step="${step}" aria-label="${escapeAttr(label)}滑块">
+  </label>`;
+}
+
+function selectControl(label, path, options) {
+  return `<label class="control-row">
+    <span>${escapeHtml(label)}</span>
+    <select data-path="${escapeAttr(path)}">
+      ${options.map(([value, text]) => `<option value="${escapeAttr(value)}">${escapeHtml(text)}</option>`).join("")}
+    </select>
+  </label>`;
+}
+
+function checkboxControl(label, path) {
+  return `<label class="toggle-row">
+    <input data-path="${escapeAttr(path)}" type="checkbox">
+    <span>${escapeHtml(label)}</span>
+  </label>`;
+}
+
+function tabButton(id, label) {
+  return `<button type="button" data-chart-tab="${id}">${escapeHtml(label)}</button>`;
+}
+
+function metricCard(label, value, subtext) {
+  return `<article class="metric-card">
+    <span>${escapeHtml(label)}</span>
+    <strong>${escapeHtml(value)}</strong>
+    <em>${escapeHtml(subtext)}</em>
+  </article>`;
+}
+
+function tableHtml(headers, rows) {
+  return `<div class="table-scroll"><table>
+    <thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell && String(cell).startsWith("<a ") ? cell : escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody>
+  </table></div>`;
+}
+
+function getByPath(object, path) {
+  return path.split(".").reduce((acc, key) => acc?.[key], object);
+}
+
+function setByPath(object, path, value) {
+  const keys = path.split(".");
+  let cursor = object;
+  keys.slice(0, -1).forEach((key) => {
+    if (!cursor[key]) cursor[key] = {};
+    cursor = cursor[key];
+  });
+  cursor[keys.at(-1)] = value;
+}
+
+function cssEscape(value) {
+  if (window.CSS && CSS.escape) return CSS.escape(value);
+  return String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+}
+
+function downloadText(filename, text, mimeType) {
+  const blob = new Blob([text], { type: mimeType });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(link.href);
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value);
+}
+</script>
+</body>
+</html>
