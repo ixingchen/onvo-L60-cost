@@ -323,6 +323,64 @@ button {
   font-weight: 700;
 }
 
+.scenario-filter {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.scenario-filter[hidden] {
+  display: none;
+}
+
+.scenario-filter-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.scenario-filter-head span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.scenario-filter-head div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.scenario-checks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.scenario-checks label {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 8px;
+  align-items: start;
+  min-height: 38px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8fafc;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.scenario-checks input {
+  margin-top: 2px;
+  accent-color: var(--teal);
+}
+
 .chart-surface,
 .table-zone {
   margin: 0;
@@ -331,6 +389,15 @@ button {
   border: 1px solid var(--line);
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.empty-chart {
+  padding: 28px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  text-align: center;
 }
 
 .chart-surface {
@@ -597,6 +664,19 @@ a {
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .scenario-filter-head {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .scenario-filter-head div {
+    justify-content: flex-start;
+  }
+
+  .scenario-checks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 720px) {
@@ -613,9 +693,13 @@ a {
 
   .control-panel,
   .metric-grid,
-  .formula-grid {
-    grid-template-columns: 1fr;
-  }
+    .formula-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .scenario-checks {
+      grid-template-columns: 1fr;
+    }
 
   .metric-grid {
     gap: 10px;
@@ -697,7 +781,7 @@ a {
 </head>
 <body>
   <script type="application/json" id="default-config">{
-  "dataVersion": "2026-05-04",
+  "dataVersion": "2026-05-07",
   "modelName": "乐道 L60 标准续航 / 60 kWh",
   "wholeCarPrice": 206900,
   "bodyPrice": 149900,
@@ -733,7 +817,16 @@ a {
   },
   "investment": {
     "annualReturn": 0.015,
-    "fundBuyoutPaymentSource": "fund"
+    "fundBuyoutPaymentSource": "fund",
+    "retainedSettlementIntervalYears": 1
+  },
+  "finance": {
+    "enableZeroInterestLoan": true,
+    "downPaymentRatio": 0,
+    "totalLoanTermMonths": 60,
+    "interestFreeMonths": 36,
+    "settlementMode": "balloon_at_interest_free_end",
+    "postFreeAnnualRate": 0.033
   },
   "pointRebate": {
     "pointRebateYuan": 0,
@@ -777,6 +870,26 @@ a {
       "id": "S4",
       "name": "2026 年汽车以旧换新补贴问答手册",
       "url": "https://www.mofcom.gov.cn/zwgk/zcfb/art/2025/art_3fbdd57f4f1b4ab78c2d9457f3517569.html"
+    },
+    {
+      "id": "F1",
+      "name": "IT之家：乐道 L60 限时 0 首付 3 年免息金融方案",
+      "url": "https://www.ithome.com/0/829/150.htm"
+    },
+    {
+      "id": "F2",
+      "name": "新浪科技/快科技：乐道 0 首付三年免息和日供示例",
+      "url": "https://finance.sina.com.cn/tech/discovery/2025-01-02/doc-inecprkm2662419.shtml"
+    },
+    {
+      "id": "F3",
+      "name": "太平洋汽车：乐道 L60 0 首付 3 年免息金融方案",
+      "url": "https://www.pcauto.com.cn/nation/4690/46903303.html"
+    },
+    {
+      "id": "F4",
+      "name": "搜狐汽车：5 年期 0 首付，前 3 年 0 利率，后两年日供示例",
+      "url": "https://www.sohu.com/a/844252772_122061"
     }
   ]
 }</script>
@@ -787,45 +900,95 @@ a {
     scenarioName: "整车买断",
     purchaseMode: "whole",
     investmentMode: "no_investment",
+    paymentMode: "cash",
     buyoutMonth: null,
     buyoutPaymentSource: "external"
   },
   {
     scenarioId: "S1",
-    scenarioName: "BaaS 永不买断 + 银行定额",
+    scenarioName: "BaaS 永不买断 + 资金留存理财",
     purchaseMode: "baas",
     investmentMode: "bank_fixed_principal",
+    paymentMode: "cash",
     buyoutMonth: Infinity,
     buyoutPaymentSource: "external"
   },
   {
     scenarioId: "S2",
-    scenarioName: "BaaS 永不买断 + 基金扣租",
+    scenarioName: "BaaS 永不买断 + 理财池扣租",
     purchaseMode: "baas",
     investmentMode: "fund_withdraw_rent",
+    paymentMode: "cash",
     buyoutMonth: Infinity,
     buyoutPaymentSource: "external"
   },
   {
     scenarioId: "S3",
-    scenarioName: "BaaS 第 N 月买断 + 银行定额",
+    scenarioName: "BaaS 第 N 月买断 + 资金留存理财",
     purchaseMode: "baas",
     investmentMode: "bank_fixed_principal",
+    paymentMode: "cash",
     buyoutMonth: "cfg",
     buyoutPaymentSource: "external"
   },
   {
     scenarioId: "S4",
-    scenarioName: "BaaS 第 N 月买断 + 基金扣租",
+    scenarioName: "BaaS 第 N 月买断 + 理财池扣租/买断",
     purchaseMode: "baas",
     investmentMode: "fund_withdraw_rent",
+    paymentMode: "cash",
     buyoutMonth: "cfg",
     buyoutPaymentSource: "cfg"
+  },
+  {
+    scenarioId: "F1",
+    scenarioName: "BaaS 五年金融前三年免息 + 资金留存理财",
+    purchaseMode: "baas",
+    investmentMode: "loan_fixed_principal",
+    paymentMode: "zero_interest_loan",
+    buyoutMonth: Infinity,
+    buyoutPaymentSource: "external"
+  },
+  {
+    scenarioId: "F2",
+    scenarioName: "BaaS 五年金融前三年免息 + 理财池还贷/扣租",
+    purchaseMode: "baas",
+    investmentMode: "loan_pool_withdraw",
+    paymentMode: "zero_interest_loan",
+    buyoutMonth: Infinity,
+    buyoutPaymentSource: "external"
+  },
+  {
+    scenarioId: "F3",
+    scenarioName: "整车五年金融前三年免息 + 资金留存理财",
+    purchaseMode: "whole",
+    investmentMode: "loan_fixed_principal",
+    paymentMode: "zero_interest_loan",
+    buyoutMonth: null,
+    buyoutPaymentSource: "external"
+  },
+  {
+    scenarioId: "F4",
+    scenarioName: "整车五年金融前三年免息 + 理财池还贷",
+    purchaseMode: "whole",
+    investmentMode: "loan_pool_withdraw",
+    paymentMode: "zero_interest_loan",
+    buyoutMonth: null,
+    buyoutPaymentSource: "external"
   }
 ];
 
 const MONEY_FIELDS = [
+  "finalNominalCashCost",
+  "finalNetCost",
   "vehicleCost",
+  "downPayment",
+  "loanPayment",
+  "loanBalloon",
+  "loanInterest",
+  "loanPrincipal",
+  "monthlyLoanPayment",
+  "balloonPayment",
   "tax",
   "subsidy",
   "insurance",
@@ -834,11 +997,16 @@ const MONEY_FIELDS = [
   "pointRebate",
   "energy",
   "resaleValue",
+  "buyoutDue",
   "nominalCashCost",
   "cumulativeCashCost",
   "investmentGain",
+  "investmentPrincipal",
   "fundBalance",
+  "fundEndingBalance",
+  "retainedSettlement",
   "fundTopUp",
+  "fundTopUpTotal",
   "netCost",
   "deltaVsBuyout"
 ];
@@ -862,6 +1030,7 @@ function normalizeConfig(input) {
   cfg.subsidyPolicy = cfg.subsidyPolicy || {};
   cfg.insurance = cfg.insurance || {};
   cfg.investment = cfg.investment || {};
+  cfg.finance = cfg.finance || {};
   cfg.pointRebate = cfg.pointRebate || {};
   cfg.rentPromotion = cfg.rentPromotion || {};
   cfg.energy = cfg.energy || {};
@@ -882,6 +1051,16 @@ function normalizeConfig(input) {
   cfg.insurance.switchInsuranceAfterBuyout = Boolean(cfg.insurance.switchInsuranceAfterBuyout);
   cfg.investment.annualReturn = Math.max(finiteNumber(cfg.investment.annualReturn, 0), -0.999);
   cfg.investment.fundBuyoutPaymentSource = cfg.investment.fundBuyoutPaymentSource === "external" ? "external" : "fund";
+  cfg.investment.retainedSettlementIntervalYears = clampInt(cfg.investment.retainedSettlementIntervalYears ?? 1, 1, 10);
+  cfg.finance.enableZeroInterestLoan = cfg.finance.enableZeroInterestLoan !== false;
+  const legacyLoanTerm = cfg.finance.loanTermMonths;
+  cfg.finance.totalLoanTermMonths = clampInt(cfg.finance.totalLoanTermMonths ?? legacyLoanTerm ?? 60, 1, 120);
+  cfg.finance.interestFreeMonths = clampInt(cfg.finance.interestFreeMonths ?? 36, 1, cfg.finance.totalLoanTermMonths);
+  cfg.finance.downPaymentRatio = Math.max(0, Math.min(1, finiteNumber(cfg.finance.downPaymentRatio, 0)));
+  cfg.finance.postFreeAnnualRate = Math.max(0, finiteNumber(cfg.finance.postFreeAnnualRate ?? cfg.finance.loanAnnualRate, 0.033));
+  cfg.finance.settlementMode = cfg.finance.settlementMode === "continue_installments_after_free"
+    ? "continue_installments_after_free"
+    : "balloon_at_interest_free_end";
   cfg.pointRebate.pointRebateYuan = finiteNumber(cfg.pointRebate.pointRebateYuan, 0);
   cfg.pointRebate.pointRebateMonth = clampInt(cfg.pointRebate.pointRebateMonth, 1, 360);
   cfg.rentPromotion.useRentPromotion = Boolean(cfg.rentPromotion.useRentPromotion);
@@ -951,16 +1130,28 @@ function simulateScenario(cfg, scenario) {
   const rows = [];
   const T = cfg.horizonMonths;
   const purchasePrice = scenario.purchaseMode === "whole" ? cfg.wholeCarPrice : cfg.bodyPrice;
+  const loan = calcLoanPlan(cfg, purchasePrice, scenario);
   const monthlyReturn = annualToMonthlyReturn(cfg.investment.annualReturn);
   let cumulativeCashCost = 0;
-  let fundBalance = scenario.investmentMode === "fund_withdraw_rent" ? cfg.batteryPrice : null;
+  const initialPrincipal = calcInvestmentPrincipal(cfg, scenario, loan);
+  let fundBalance = hasInvestmentPool(scenario) ? initialPrincipal : null;
   let investmentGain = 0;
+  let pendingRetainedSettlement = 0;
   const buyoutMonth = scenario.buyoutMonth;
 
   for (let month = 1; month <= T; month += 1) {
     const hasBuyoutEvent = scenario.purchaseMode === "baas" && Number.isFinite(buyoutMonth) && month === buyoutMonth;
     const isRenting = scenario.purchaseMode === "baas" && (buyoutMonth === Infinity || month <= buyoutMonth);
-    const vehicleCost = month === 1 ? purchasePrice : 0;
+    const downPayment = month === 1 ? loan.downPayment : 0;
+    const vehicleCost = scenario.paymentMode === "zero_interest_loan"
+      ? downPayment
+      : month === 1
+        ? purchasePrice
+        : 0;
+    const loanSchedule = calcLoanPaymentForMonth(loan, month);
+    const loanPayment = scenario.paymentMode === "zero_interest_loan" ? loanSchedule.totalPayment : 0;
+    const loanBalloon = scenario.paymentMode === "zero_interest_loan" ? loanSchedule.balloonPayment : 0;
+    const loanInterest = scenario.paymentMode === "zero_interest_loan" ? loanSchedule.interestPayment : 0;
     const tax = month === 1 ? calcPurchaseTax(purchasePrice, cfg) : 0;
     const subsidy = month === cfg.subsidyPolicy.subsidyReceiveMonth ? calcSubsidy(purchasePrice, cfg) : 0;
     const pointRebate = month === cfg.pointRebate.pointRebateMonth ? cfg.pointRebate.pointRebateYuan : 0;
@@ -969,18 +1160,34 @@ function simulateScenario(cfg, scenario) {
     const buyout = hasBuyoutEvent ? calcBuyoutDue(cfg, buyoutMonth) : 0;
     const energy = cfg.energy.includeEnergyCost ? calcMonthlyEnergyCost(cfg) : 0;
     const resaleValue = cfg.resale.includeResaleValue && month === T ? cfg.resale.resaleValueYuan : 0;
-    const nominalCashCost = vehicleCost + tax + insurance + rent + buyout + energy - subsidy - pointRebate - resaleValue;
+    const nominalCashCost = vehicleCost + loanPayment + tax + insurance + rent + buyout + energy - subsidy - pointRebate - resaleValue;
 
     cumulativeCashCost += nominalCashCost;
 
     let fundTopUp = 0;
-    if (scenario.investmentMode === "bank_fixed_principal") {
-      investmentGain = cfg.batteryPrice * ((1 + monthlyReturn) ** month - 1);
-    } else if (scenario.investmentMode === "fund_withdraw_rent") {
+    let retainedSettlement = 0;
+    if (isFixedPrincipalInvestment(scenario)) {
       const interest = fundBalance * monthlyReturn;
       investmentGain += interest;
       fundBalance += interest;
-      let withdrawal = rent;
+      pendingRetainedSettlement += calcRetainedExternalUse(scenario, { rent, buyout, loanPayment });
+      if (shouldSettleRetainedPool(cfg, month, T) && pendingRetainedSettlement > 0) {
+        retainedSettlement = pendingRetainedSettlement;
+        if (retainedSettlement > fundBalance) {
+          fundTopUp = retainedSettlement - fundBalance;
+          fundBalance = 0;
+        } else {
+          fundBalance -= retainedSettlement;
+        }
+        pendingRetainedSettlement = 0;
+      }
+    } else if (isPoolInvestment(scenario)) {
+      const interest = fundBalance * monthlyReturn;
+      investmentGain += interest;
+      fundBalance += interest;
+      let withdrawal = 0;
+      if (scenario.investmentMode === "fund_withdraw_rent") withdrawal += rent;
+      if (scenario.investmentMode === "loan_pool_withdraw") withdrawal += loanPayment + rent;
       if (buyout > 0 && scenario.buyoutPaymentSource === "fund") withdrawal += buyout;
       if (withdrawal > fundBalance) {
         fundTopUp = withdrawal - fundBalance;
@@ -996,6 +1203,10 @@ function simulateScenario(cfg, scenario) {
       scenarioId: scenario.scenarioId,
       scenarioName: scenario.scenarioName,
       vehicleCost,
+      downPayment,
+      loanPayment,
+      loanBalloon,
+      loanInterest,
       tax,
       subsidy,
       insurance,
@@ -1008,6 +1219,7 @@ function simulateScenario(cfg, scenario) {
       cumulativeCashCost,
       investmentGain,
       fundBalance: fundBalance === null ? null : fundBalance,
+      retainedSettlement,
       fundTopUp,
       netCost: cumulativeCashCost - investmentGain,
       deltaVsBuyout: 0
@@ -1031,6 +1243,10 @@ function summarizeResults(cfg, scenarios, monthlyByScenario) {
       deltaVsBuyout: last.deltaVsBuyout,
       breakEvenMonth: breakEvenRow ? breakEvenRow.month : null,
       buyoutDue: finiteBuyout ? calcBuyoutDue(cfg, scenario.buyoutMonth) : 0,
+      investmentPrincipal: calcInvestmentPrincipal(cfg, scenario),
+      loanPrincipal: rows.reduce((acc, row) => acc + row.loanPayment - row.loanInterest, 0),
+      monthlyLoanPayment: rows.find((row) => row.loanPayment > 0)?.loanPayment || 0,
+      balloonPayment: rows.reduce((acc, row) => acc + row.loanBalloon, 0),
       fundEndingBalance: last.fundBalance,
       fundTopUpTotal: sum(rows.map((row) => row.fundTopUp)),
       minCostFlag: false
@@ -1048,6 +1264,72 @@ function calcPurchaseTax(invoiceTaxInclusivePrice, cfg) {
   const baseTax = invoiceTaxInclusivePrice / policy.vatDivisor * policy.taxRate;
   const taxRelief = Math.min(baseTax * policy.reliefRate, policy.taxReliefCap);
   return roundMoney(Math.max(baseTax - taxRelief, 0));
+}
+
+function calcLoanPlan(cfg, purchasePrice, scenario = {}) {
+  if (scenario.paymentMode !== "zero_interest_loan") {
+    return {
+      downPayment: purchasePrice,
+      loanPrincipal: 0,
+      totalLoanTermMonths: 0,
+      interestFreeMonths: 0,
+      regularPrincipalPayment: 0,
+      postFreeMonthlyPayment: 0,
+      balloonPayment: 0,
+      postFreeAnnualRate: cfg.finance.postFreeAnnualRate,
+      settlementMode: cfg.finance.settlementMode
+    };
+  }
+  const downPayment = roundMoney(purchasePrice * cfg.finance.downPaymentRatio);
+  const loanPrincipal = roundMoney(Math.max(purchasePrice - downPayment, 0));
+  const totalLoanTermMonths = Math.max(1, cfg.finance.totalLoanTermMonths);
+  const interestFreeMonths = Math.min(cfg.finance.interestFreeMonths, totalLoanTermMonths);
+  const regularPrincipalPayment = roundMoney(loanPrincipal / totalLoanTermMonths);
+  const principalPaidDuringFree = regularPrincipalPayment * interestFreeMonths;
+  const remainingAfterFree = roundMoney(Math.max(loanPrincipal - principalPaidDuringFree, 0));
+  const remainingMonths = Math.max(0, totalLoanTermMonths - interestFreeMonths);
+  const postFreeMonthlyPayment = cfg.finance.settlementMode === "continue_installments_after_free" && remainingMonths > 0
+    ? calcAmortizedPayment(remainingAfterFree, annualToMonthlyReturn(cfg.finance.postFreeAnnualRate), remainingMonths)
+    : 0;
+  const balloonPayment = cfg.finance.settlementMode === "balloon_at_interest_free_end" ? remainingAfterFree : 0;
+  return {
+    downPayment,
+    loanPrincipal,
+    totalLoanTermMonths,
+    interestFreeMonths,
+    regularPrincipalPayment,
+    remainingAfterFree,
+    postFreeMonthlyPayment,
+    balloonPayment,
+    postFreeAnnualRate: cfg.finance.postFreeAnnualRate,
+    settlementMode: cfg.finance.settlementMode
+  };
+}
+
+function calcLoanPaymentForMonth(loan, month) {
+  if (!loan.loanPrincipal || month > loan.totalLoanTermMonths) {
+    return { totalPayment: 0, principalPayment: 0, interestPayment: 0, balloonPayment: 0 };
+  }
+  if (month <= loan.interestFreeMonths) {
+    const isBalloonMonth = loan.settlementMode === "balloon_at_interest_free_end" && month === loan.interestFreeMonths;
+    const balloonPayment = isBalloonMonth ? loan.balloonPayment : 0;
+    return {
+      totalPayment: roundMoney(loan.regularPrincipalPayment + balloonPayment),
+      principalPayment: roundMoney(loan.regularPrincipalPayment + balloonPayment),
+      interestPayment: 0,
+      balloonPayment
+    };
+  }
+  if (loan.settlementMode !== "continue_installments_after_free") {
+    return { totalPayment: 0, principalPayment: 0, interestPayment: 0, balloonPayment: 0 };
+  }
+  const monthsAfterFree = month - loan.interestFreeMonths;
+  const remainingBeforePayment = calcRemainingAfterPriorPayments(loan, monthsAfterFree - 1);
+  const monthlyRate = annualToMonthlyReturn(cfgFinanceRateFallback(loan));
+  const interestPayment = roundMoney(remainingBeforePayment * monthlyRate);
+  const totalPayment = loan.postFreeMonthlyPayment;
+  const principalPayment = roundMoney(Math.max(totalPayment - interestPayment, 0));
+  return { totalPayment, principalPayment, interestPayment, balloonPayment: 0 };
 }
 
 function calcSubsidy(invoiceTaxInclusivePrice, cfg) {
@@ -1108,6 +1390,65 @@ function annualToMonthlyReturn(annualReturn) {
   return (1 + annualReturn) ** (1 / 12) - 1;
 }
 
+function calcInvestmentPrincipal(cfg, scenario, loan = null) {
+  const batteryReserve = scenario.purchaseMode === "baas" ? cfg.batteryPrice : 0;
+  if (scenario.paymentMode === "zero_interest_loan") {
+    const plan = loan || calcLoanPlan(cfg, scenario.purchaseMode === "whole" ? cfg.wholeCarPrice : cfg.bodyPrice, scenario);
+    return roundMoney(plan.loanPrincipal + batteryReserve);
+  }
+  if (scenario.investmentMode === "bank_fixed_principal" || scenario.investmentMode === "fund_withdraw_rent") {
+    return roundMoney(batteryReserve);
+  }
+  return 0;
+}
+
+function isFixedPrincipalInvestment(scenario) {
+  return scenario.investmentMode === "bank_fixed_principal" || scenario.investmentMode === "loan_fixed_principal";
+}
+
+function isPoolInvestment(scenario) {
+  return scenario.investmentMode === "fund_withdraw_rent" || scenario.investmentMode === "loan_pool_withdraw";
+}
+
+function hasInvestmentPool(scenario) {
+  return isFixedPrincipalInvestment(scenario) || isPoolInvestment(scenario);
+}
+
+function calcRetainedExternalUse(scenario, amounts) {
+  let value = 0;
+  if (scenario.purchaseMode === "baas") value += amounts.rent;
+  if (scenario.paymentMode === "zero_interest_loan") value += amounts.loanPayment;
+  if (isFixedPrincipalInvestment(scenario)) value += amounts.buyout;
+  return value;
+}
+
+function shouldSettleRetainedPool(cfg, month, horizonMonths) {
+  const intervalMonths = cfg.investment.retainedSettlementIntervalYears * 12;
+  return month % intervalMonths === 0 || month === horizonMonths;
+}
+
+function calcAmortizedPayment(principal, monthlyRate, months) {
+  if (principal <= 0 || months <= 0) return 0;
+  if (Math.abs(monthlyRate) < 1e-12) return roundMoney(principal / months);
+  const factor = (monthlyRate * (1 + monthlyRate) ** months) / ((1 + monthlyRate) ** months - 1);
+  return roundMoney(principal * factor);
+}
+
+function calcRemainingAfterPriorPayments(loan, priorPayments) {
+  const monthlyRate = annualToMonthlyReturn(cfgFinanceRateFallback(loan));
+  let remaining = loan.remainingAfterFree;
+  for (let i = 0; i < priorPayments; i += 1) {
+    const interest = remaining * monthlyRate;
+    const principal = Math.max(loan.postFreeMonthlyPayment - interest, 0);
+    remaining = Math.max(remaining - principal, 0);
+  }
+  return remaining;
+}
+
+function cfgFinanceRateFallback(loan) {
+  return loan.postFreeAnnualRate ?? 0;
+}
+
 function toCsv(rows) {
   if (!rows.length) return "";
   const headers = Object.keys(rows[0]);
@@ -1166,6 +1507,7 @@ function sum(values) {
 const SERIES_COLORS = ["#0f766e", "#2563eb", "#b45309", "#be123c", "#6d28d9", "#0f172a"];
 const COMPONENT_COLORS = {
   vehicleCost: "#0f766e",
+  loanPayment: "#0ea5e9",
   tax: "#2563eb",
   insurance: "#7c3aed",
   rent: "#d97706",
@@ -1274,7 +1616,8 @@ function renderCompositionChart(monthlyResult) {
   const height = 430;
   const margin = { top: 58, right: 118, bottom: 34, left: 92 };
   const components = [
-    ["vehicleCost", "车价"],
+    ["vehicleCost", "车价/首付"],
+    ["loanPayment", "贷款月供"],
     ["tax", "购置税"],
     ["insurance", "保险"],
     ["rent", "租金"],
@@ -1528,6 +1871,7 @@ const root = document.getElementById("app");
 let cfg = cloneConfig(DEFAULT_CONFIG);
 let activeChart = "cost";
 let activeTableScenario = "S0";
+let visibleScenarioIds = new Set(SCENARIOS.map((scenario) => scenario.scenarioId));
 
 renderShell();
 bindEvents();
@@ -1582,10 +1926,22 @@ function renderShell() {
           ${numberControl("续保折扣", "insurance.afterYear1Factor", 0, 1.5, 0.01, "")}
           ${checkboxControl("买断后切换保险口径", "insurance.switchInsuranceAfterBuyout")}
           ${numberControl("年化收益率", "investment.annualReturn", -0.2, 0.2, 0.001, "")}
+          ${numberControl("留存理财结算周期", "investment.retainedSettlementIntervalYears", 1, 5, 1, "年")}
           ${selectControl("S4 买断款来源", "investment.fundBuyoutPaymentSource", [
             ["fund", "基金账户"],
             ["external", "外部支付"]
           ])}
+        </section>
+        <section class="panel-section">
+          <h2>五年金融 / 前三年免息</h2>
+          ${numberControl("首付比例", "finance.downPaymentRatio", 0, 1, 0.01, "")}
+          ${numberControl("总贷款期", "finance.totalLoanTermMonths", 36, 84, 1, "月")}
+          ${numberControl("免息期", "finance.interestFreeMonths", 12, 60, 1, "月", { maxPath: "finance.totalLoanTermMonths" })}
+          ${selectControl("免息期末处理", "finance.settlementMode", [
+            ["balloon_at_interest_free_end", "第 36 月一次性结清"],
+            ["continue_installments_after_free", "后续月份继续分期"]
+          ])}
+          ${numberControl("后续分期年化", "finance.postFreeAnnualRate", 0, 0.12, 0.001, "")}
         </section>
         <details class="panel-section" open>
           <summary>高级参数</summary>
@@ -1611,6 +1967,7 @@ function renderShell() {
           ${tabButton("fund", "基金余额")}
           ${tabButton("composition", "成本构成")}
         </nav>
+        <section class="scenario-filter" id="scenario-filter-panel" aria-label="曲线筛选"></section>
         <section id="charts"></section>
         <section class="table-zone">
           <div class="table-toolbar">
@@ -1646,6 +2003,12 @@ function bindEvents() {
       activeTableScenario = event.target.value;
       recalculate();
     }
+    if (event.target.matches("[data-scenario-visible]")) {
+      const id = event.target.dataset.scenarioVisible;
+      if (event.target.checked) visibleScenarioIds.add(id);
+      else visibleScenarioIds.delete(id);
+      recalculate();
+    }
   });
   root.addEventListener("click", (event) => {
     const chartButton = event.target.closest("[data-chart-tab]");
@@ -1657,6 +2020,7 @@ function bindEvents() {
     if (event.target.id === "reset-config") {
       cfg = cloneConfig(DEFAULT_CONFIG);
       activeTableScenario = "S0";
+      visibleScenarioIds = new Set(SCENARIOS.map((scenario) => scenario.scenarioId));
       syncControls();
       recalculate();
     }
@@ -1672,6 +2036,12 @@ function bindEvents() {
       const result = runCostSimulation(cfg);
       downloadText("onvo_l60_monthly_results.csv", "\ufeff" + toCsv(result.monthlyResult), "text/csv;charset=utf-8");
     }
+    const filterPreset = event.target.closest("[data-filter-preset]");
+    if (filterPreset) {
+      const result = runCostSimulation(cfg);
+      visibleScenarioIds = buildScenarioPreset(filterPreset.dataset.filterPreset, result.scenarios);
+      recalculate();
+    }
   });
 }
 
@@ -1681,6 +2051,7 @@ function recalculate() {
   syncControls();
   updateTabState();
   renderWarnings(result.warnings);
+  renderScenarioFilter(result);
   renderMetrics(result);
   renderCharts(result);
   renderTables(result);
@@ -1692,6 +2063,32 @@ function renderWarnings(warnings) {
   el.innerHTML = warnings.length
     ? `<div class="warning-strip">${warnings.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`
     : "";
+}
+
+function renderScenarioFilter(result) {
+  const panel = document.getElementById("scenario-filter-panel");
+  const shouldShow = activeChart === "cost" || activeChart === "delta";
+  panel.hidden = !shouldShow;
+  if (!shouldShow) {
+    panel.innerHTML = "";
+    return;
+  }
+  panel.innerHTML = `
+    <div class="scenario-filter-head">
+      <strong>曲线筛选</strong>
+      <span>可选择净成本和差额曲线显示哪些方案</span>
+      <div>
+        <button type="button" class="ghost-button" data-filter-preset="all">全选</button>
+        <button type="button" class="ghost-button" data-filter-preset="base">仅基础</button>
+        <button type="button" class="ghost-button" data-filter-preset="finance">仅免息贷款</button>
+      </div>
+    </div>
+    <div class="scenario-checks">
+      ${result.scenarios.map((scenario) => `<label>
+        <input type="checkbox" data-scenario-visible="${escapeAttr(scenario.scenarioId)}" ${visibleScenarioIds.has(scenario.scenarioId) ? "checked" : ""}>
+        <span>${escapeHtml(scenario.scenarioId)} ${escapeHtml(scenario.scenarioName)}</span>
+      </label>`).join("")}
+    </div>`;
 }
 
 function renderMetrics(result) {
@@ -1707,23 +2104,33 @@ function renderMetrics(result) {
     metricCard("租电初始节省", formatYuan(s0m1 - s1m1), "第 1 月现金口径"),
     metricCard("S1 盈亏平衡", s1.breakEvenMonth ? `第 ${s1.breakEvenMonth} 月` : "未达到", "相对整车买断"),
     metricCard("指定月买断应付", formatYuan(buyoutDue), `第 ${currentCfg.buyoutMonth} 月末`),
-    metricCard("S4 期末基金余额", s4.fundEndingBalance === null ? "无" : formatYuan(s4.fundEndingBalance), s4.fundTopUpTotal ? `补足 ${formatYuan(s4.fundTopUpTotal)}` : "未触发补足")
+    metricCard("S4 期末资金池余额", s4.fundEndingBalance === null ? "无" : formatYuan(s4.fundEndingBalance), s4.fundTopUpTotal ? `补足 ${formatYuan(s4.fundTopUpTotal)}` : "未触发补足")
   ].join("");
 }
 
 function renderCharts(result) {
   const chartHost = document.getElementById("charts");
   if (activeChart === "cost") {
+    const series = buildSeries(result.monthlyResult, "netCost", (row) => visibleScenarioIds.has(row.scenarioId));
+    if (!series.length) {
+      chartHost.innerHTML = emptyChart();
+      return;
+    }
     chartHost.innerHTML = renderLineChart({
       title: "逐月累计净成本曲线",
       subtitle: "净成本 = 累计现金成本 - 投资收益",
-      series: buildSeries(result.monthlyResult, "netCost")
+      series
     });
   } else if (activeChart === "delta") {
+    const series = buildSeries(result.monthlyResult, "deltaVsBuyout", (row) => row.scenarioId !== "S0" && visibleScenarioIds.has(row.scenarioId));
+    if (!series.length) {
+      chartHost.innerHTML = emptyChart();
+      return;
+    }
     chartHost.innerHTML = renderLineChart({
       title: "相对整车买断差额曲线",
       subtitle: "差额小于 0 表示低于整车买断",
-      series: buildSeries(result.monthlyResult, "deltaVsBuyout", (row) => row.scenarioId !== "S0"),
+      series,
       zeroLine: true
     });
   } else if (activeChart === "buyout") {
@@ -1731,8 +2138,8 @@ function renderCharts(result) {
   } else if (activeChart === "fund") {
     chartHost.innerHTML = renderLineChart({
       title: "投资账户余额曲线",
-      subtitle: "仅展示基金扣租方案",
-      series: buildSeries(result.monthlyResult, "fundBalance", (row) => row.scenarioId === "S2" || row.scenarioId === "S4"),
+      subtitle: "资金留存理财为按周期结算扣款，理财池方案为逐月扣款",
+      series: buildSeries(result.monthlyResult, "fundBalance", (row) => row.fundBalance !== null),
       zeroLine: true
     });
   } else {
@@ -1752,14 +2159,20 @@ function renderTables(result) {
     "净成本",
     "相对买断",
     "盈亏平衡",
+    "初始资金池",
+    "月供",
+    "结清款",
     "买断应付",
-    "基金余额"
+    "资金池余额"
   ], result.summaryResult.map((row) => [
     `${row.scenarioId} ${row.scenarioName}${row.minCostFlag ? " *" : ""}`,
     formatYuan(row.finalNominalCashCost),
     formatYuan(row.finalNetCost),
     formatYuan(row.deltaVsBuyout),
     row.breakEvenMonth ? `第 ${row.breakEvenMonth} 月` : "",
+    row.investmentPrincipal ? formatYuan(row.investmentPrincipal) : "",
+    row.monthlyLoanPayment ? formatYuan(row.monthlyLoanPayment) : "",
+    row.balloonPayment ? formatYuan(row.balloonPayment) : "",
     row.buyoutDue ? formatYuan(row.buyoutDue) : "",
     row.fundEndingBalance === null ? "" : formatYuan(row.fundEndingBalance)
   ]));
@@ -1767,23 +2180,27 @@ function renderTables(result) {
   document.getElementById("monthly-table").innerHTML = tableHtml([
     "月",
     "车价",
+    "贷款",
     "税",
     "保险",
     "租金",
     "买断",
     "补贴",
     "投资收益",
-    "基金余额",
+    "留存结算",
+    "资金池余额",
     "净成本"
   ], rows.map((row) => [
     row.month,
     formatYuan(row.vehicleCost),
+    formatYuan(row.loanPayment),
     formatYuan(row.tax),
     formatYuan(row.insurance),
     formatYuan(row.rent),
     formatYuan(row.buyout),
     formatYuan(row.subsidy + row.pointRebate),
     formatYuan(row.investmentGain),
+    formatYuan(row.retainedSettlement),
     row.fundBalance === null ? "" : formatYuan(row.fundBalance),
     formatYuan(row.netCost)
   ]));
@@ -1799,7 +2216,8 @@ function renderFormulaBlock(currentCfg) {
     <div class="formula-grid">
       <p><strong>购置税</strong>：购车价 / ${currentCfg.taxPolicy.vatDivisor} × ${(currentCfg.taxPolicy.taxRate * 100).toFixed(1)}%，再按 ${(currentCfg.taxPolicy.reliefRate * 100).toFixed(1)}% 减免，单车减税额封顶 ${formatYuan(currentCfg.taxPolicy.taxReliefCap)}。</p>
       <p><strong>买断抵扣</strong>：第 ${currentCfg.creditStartMonth}-${currentCfg.creditEndMonth} 月按 ${formatYuan(currentCfg.creditPerMonth)} / 月累计抵扣，买断款不低于 0。</p>
-      <p><strong>投资收益</strong>：月收益率 = (1 + 年化收益率)<sup>1/12</sup> - 1；基金扣租方案先计收益，再扣当月租金和可选买断款。</p>
+      <p><strong>投资收益</strong>：月收益率 = (1 + 年化收益率)<sup>1/12</sup> - 1；普通 BaaS 初始资金池为电池价，BaaS 金融初始资金池为车身贷款本金 + 电池价，整车金融初始资金池为整车贷款本金；理财池方案逐月扣租金、月供和可选买断款；资金留存理财默认每 ${currentCfg.investment.retainedSettlementIntervalYears} 年从资金池中扣回期间外部垫付的租金、贷款和买断款。</p>
+      <p><strong>五年金融 / 前三年免息</strong>：首付 = 购车价 × 首付比例；贷款本金 = 购车价 - 首付；免息期月供按贷款本金 / 总贷款期摊还本金。BaaS 贷款只覆盖车身价，电池未买断资金另计入资金池。默认在第 ${currentCfg.finance.interestFreeMonths} 月支付剩余本金结清，也可切换为后续月份继续分期。</p>
       <p><strong>免责声明</strong>：本工具输出为给定参数下的模拟结果，不构成购车、税务或投资建议。</p>
     </div>
     ${tableHtml(["编号", "资料", "链接"], sourceRows)}
@@ -1876,6 +2294,20 @@ function checkboxControl(label, path) {
 
 function tabButton(id, label) {
   return `<button type="button" data-chart-tab="${id}">${escapeHtml(label)}</button>`;
+}
+
+function buildScenarioPreset(preset, scenarios) {
+  if (preset === "base") {
+    return new Set(scenarios.filter((scenario) => !scenario.scenarioId.startsWith("F")).map((scenario) => scenario.scenarioId));
+  }
+  if (preset === "finance") {
+    return new Set(scenarios.filter((scenario) => scenario.scenarioId.startsWith("F")).map((scenario) => scenario.scenarioId));
+  }
+  return new Set(scenarios.map((scenario) => scenario.scenarioId));
+}
+
+function emptyChart() {
+  return `<div class="empty-chart">当前没有选择可显示的方案，请在“曲线筛选”中至少勾选一项。</div>`;
 }
 
 function metricCard(label, value, subtext) {
