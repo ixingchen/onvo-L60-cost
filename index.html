@@ -4,71 +4,145 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>蔚乐萤买断 / 租电成本仿真</title>
-  <style>:root {
-  --bg: #f6f7f9;
+  <style>
+:root {
+  /* 顶级科技感调色板 */
+  --bg: #f5f5f7;
   --surface: #ffffff;
-  --surface-soft: #eef7f5;
-  --ink: #1d2329;
-  --muted: #64717f;
-  --line: #d8dee6;
-  --teal: #0f766e;
-  --blue: #2563eb;
-  --amber: #b45309;
-  --rose: #be123c;
-  --green: #15803d;
-  --shadow: 0 12px 30px rgba(18, 32, 47, 0.08);
+  --surface-soft: #fbfbfd;
+  --surface-hover: #f1f1f4;
+  --ink: #1d1d1f;
+  --muted: #86868b;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-light: rgba(0, 0, 0, 0.04);
+  
+  /* 品牌强调色：克制而高级 */
+  --accent: #0071e3;
+  --accent-hover: #0077ED;
+  --teal: #0071e3; 
+  --amber: #f59e0b;
+  --rose: #ff3b30;
+  --green: #34c759;
+  
+  /* 现代柔和物理阴影 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.02);
+  --shadow-hover: 0 10px 30px rgba(0, 0, 0, 0.08), 0 20px 40px rgba(0, 0, 0, 0.04);
+  
+  /* 圆角规范 */
+  --radius-xl: 20px;
+  --radius-lg: 16px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  
+  /* 字体栈：优先 Apple 系统字体 */
+  --font-stack: "SF Pro Text", "SF Pro Icons", -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Apple-like motion: 慢进快出，轻微弹性但不夸张 */
+  --ease-apple: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-layout: 720ms;
+  --motion-panel: 560ms;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* 全局平滑滚动与排版 */
 body {
   margin: 0;
   color: var(--ink);
   background: var(--bg);
-  font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
-  letter-spacing: 0;
+  font-family: var(--font-stack);
+  letter-spacing: -0.015em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-html,
-body {
-  max-width: 100%;
+html, body {
+  max-width: 100vw;
   overflow-x: hidden;
 }
 
-button,
-input,
-select {
+/* 全局唯美滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+  border: 2px solid var(--surface); /* 制造悬浮感 */
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+button, input, select {
   font: inherit;
+  outline: none;
 }
 
 button {
   cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+button:active {
+  transform: scale(0.96);
 }
 
+/* --- 入场全局动画 (Staggered Fade Up) --- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.panel-section, .metric-card, .chart-surface, .table-zone, .scenario-filter {
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* 为不同模块错开加载时间，制造极度流畅的高级感 */
+.metric-card:nth-child(1) { animation-delay: 0.05s; }
+.metric-card:nth-child(2) { animation-delay: 0.1s; }
+.metric-card:nth-child(3) { animation-delay: 0.15s; }
+.metric-card:nth-child(4) { animation-delay: 0.2s; }
+.metric-card:nth-child(5) { animation-delay: 0.25s; }
+.chart-surface { animation-delay: 0.2s; }
+.table-zone { animation-delay: 0.3s; }
+
+/* --- 顶部导航栏 (高斯模糊) --- */
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  min-height: 92px;
-  padding: 20px 28px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  min-height: 72px;
+  padding: 12px max(32px, calc((100vw - 1440px) / 2));
+  background: rgba(245, 245, 247, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--line-light);
 }
 
 .topbar h1 {
   margin: 4px 0 0;
-  font-size: 28px;
-  line-height: 1.2;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .eyebrow {
   margin: 0;
-  color: var(--teal);
-  font-size: 12px;
+  color: var(--muted);
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .topbar-meta {
@@ -76,188 +150,280 @@ button {
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.primary-button,
-.ghost-button {
+/* --- 按钮系统 --- */
+.primary-button, .ghost-button {
   min-height: 36px;
-  border-radius: 6px;
-  padding: 0 14px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
+  border-radius: var(--radius-sm);
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
 }
 
 .primary-button {
-  border-color: var(--teal);
-  background: var(--teal);
+  background: var(--ink);
   color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.primary-button:hover {
+  background: #333336;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.ghost-button {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
 }
 
 .ghost-button:hover {
-  border-color: var(--blue);
-  color: var(--blue);
+  background: var(--surface);
+  border-color: var(--muted);
 }
 
+/* --- 布局容器 --- */
 .app-shell {
   display: grid;
-  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  grid-template-columns: clamp(320px, 25vw, 360px) minmax(0, 1fr);
   align-items: start;
-  gap: 18px;
-  padding: 18px;
+  gap: 24px;
+  padding: 32px max(32px, calc((100vw - 1440px) / 2));
+  transition:
+    grid-template-columns var(--motion-layout) var(--ease-apple),
+    gap var(--motion-layout) var(--ease-apple),
+    padding var(--motion-layout) var(--ease-apple);
+  will-change: grid-template-columns;
 }
 
-.control-panel,
-.workspace {
-  min-width: 0;
+.control-panel, .workspace {
+  min-width: 0; /* 极其重要：防止 Grid 子元素撑破父级 */
 }
 
+/* --- 左侧控制面板 --- */
 .control-panel {
   position: sticky;
-  top: 16px;
+  top: 96px; 
   display: grid;
-  gap: 12px;
-  max-height: calc(100vh - 32px);
-  overflow: auto;
+  gap: 20px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding: 16px 12px 18px 16px;
+  border: 1px solid var(--line-light);
+  border-radius: calc(var(--radius-xl) + 8px);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  transform: translate3d(0, 0, 0) scale(1);
+  transform-origin: top left;
+  clip-path: inset(0 0 0 0 round calc(var(--radius-xl) + 8px));
+  filter: blur(0) saturate(1);
+  transition:
+    opacity var(--motion-panel) var(--ease-soft),
+    transform var(--motion-layout) var(--ease-apple),
+    filter var(--motion-panel) ease,
+    clip-path var(--motion-layout) var(--ease-apple),
+    padding var(--motion-layout) var(--ease-apple),
+    border-color var(--motion-panel) ease,
+    box-shadow var(--motion-panel) ease,
+    max-height var(--motion-layout) var(--ease-apple);
+  will-change: opacity, transform, clip-path, filter;
+}
+
+.control-toggle {
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  transition:
+    background var(--motion-panel) var(--ease-soft),
+    border-color var(--motion-panel) var(--ease-soft),
+    color var(--motion-panel) var(--ease-soft),
+    transform 220ms var(--ease-soft);
+}
+
+.control-toggle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.45) 45%, transparent 70%);
+  transform: translateX(-140%);
+  transition: transform 760ms var(--ease-apple);
+  pointer-events: none;
+}
+
+.control-toggle:hover::after {
+  transform: translateX(140%);
+}
+
+.app-shell.is-sidebar-collapsed {
+  grid-template-columns: 0px minmax(0, 1fr);
+  gap: 0;
+}
+
+.app-shell.is-sidebar-collapsed .control-panel {
+  opacity: 0;
+  transform: translate3d(-28px, 0, 0) scale(0.982);
+  clip-path: inset(0 100% 0 0 round calc(var(--radius-xl) + 8px));
+  filter: blur(5px) saturate(0.94);
+  pointer-events: none;
+  overflow: hidden;
+  padding-left: 0;
+  padding-right: 0;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.control-panel > * {
+  transition:
+    opacity 420ms var(--ease-soft),
+    transform 520ms var(--ease-apple),
+    filter 420ms ease;
+}
+
+.app-shell.is-sidebar-collapsed .control-panel > * {
+  opacity: 0;
+  transform: translate3d(-10px, 0, 0) scale(0.985);
+  filter: blur(3px);
+}
+
+.workspace {
+  transition:
+    transform var(--motion-layout) var(--ease-apple),
+    opacity var(--motion-panel) ease,
+    filter var(--motion-panel) ease;
+  will-change: transform;
+}
+
+.app-shell.is-sidebar-collapsing .workspace {
+  animation: workspaceBloom var(--motion-layout) var(--ease-apple) both;
+}
+
+.app-shell.is-sidebar-expanding .workspace {
+  animation: workspaceSettle var(--motion-layout) var(--ease-apple) both;
+}
+
+@keyframes workspaceBloom {
+  0% { transform: translate3d(-10px, 0, 0) scale(0.994); filter: saturate(0.98); }
+  58% { transform: translate3d(2px, 0, 0) scale(1.001); filter: saturate(1.02); }
+  100% { transform: translate3d(0, 0, 0) scale(1); filter: saturate(1); }
+}
+
+@keyframes workspaceSettle {
+  0% { transform: translate3d(10px, 0, 0) scale(1.002); filter: saturate(0.98); }
+  100% { transform: translate3d(0, 0, 0) scale(1); filter: saturate(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .panel-section {
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 15px;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.panel-section:hover {
   box-shadow: var(--shadow);
 }
 
-.panel-section h2,
-.panel-section summary {
-  margin: 0 0 12px;
-  font-size: 16px;
-  font-weight: 700;
+.panel-section h2, .panel-section summary {
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 
 .panel-section summary {
   cursor: pointer;
+  outline: none;
+  list-style: none; /* Hide default arrow */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-
-.model-picker {
-  display: grid;
-  gap: 10px;
+.panel-section summary::-webkit-details-marker {
+  display: none;
+}
+.panel-section summary::after {
+  content: "＋";
+  color: var(--accent);
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+.panel-section[open] summary::after {
+  transform: rotate(45deg);
 }
 
 .model-picker p {
-  margin: 0;
+  margin: 12px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
-.segmented-control {
+/* --- 表单控件交互美化 --- */
+.control-row, .toggle-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.segmented-control button {
-  min-height: 54px;
-  display: grid;
-  align-content: center;
-  gap: 3px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: #f8fafc;
+  gap: 8px;
+  margin-top: 16px;
   color: var(--ink);
-  padding: 8px;
-  text-align: center;
-}
-
-.segmented-control button.is-active {
-  border-color: var(--teal);
-  background: var(--surface-soft);
-  color: var(--teal);
-  font-weight: 700;
-}
-
-.segmented-control small {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 400;
-  overflow-wrap: anywhere;
-}
-
-.model-buttons {
-  grid-template-columns: 1fr;
-}
-
-.control-row,
-.toggle-row {
-  display: grid;
-  gap: 7px;
-  margin-top: 12px;
-  color: var(--muted);
   font-size: 13px;
+  font-weight: 500;
 }
 
 .control-label {
-  color: var(--muted);
-}
-
-.control-row input,
-.control-row select {
-  width: 100%;
-  min-height: 38px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 0 10px;
-  background: #fff;
   color: var(--ink);
 }
 
-.control-row input[type="range"] {
-  min-height: 24px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  accent-color: var(--teal);
+.control-row input[type="number"], 
+.control-row select {
+  width: 100%;
+  min-height: 44px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius);
+  padding: 0 14px;
+  background: var(--bg);
+  color: var(--ink);
+  transition: all 0.25s ease;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
 }
 
-.range-control {
+.control-row input[type="number"]:focus, 
+.control-row select:focus {
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+}
+
+.control-row select {
   cursor: pointer;
-}
-
-.range-control::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 999px;
-  background: #dbe5eb;
-}
-
-.range-control::-webkit-slider-thumb {
-  width: 18px;
-  height: 18px;
-  margin-top: -6px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  background: var(--teal);
-  box-shadow: 0 2px 7px rgba(15, 118, 110, 0.35);
-  -webkit-appearance: none;
-}
-
-.range-control::-moz-range-track {
-  height: 6px;
-  border-radius: 999px;
-  background: #dbe5eb;
-}
-
-.range-control::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  background: var(--teal);
-  box-shadow: 0 2px 7px rgba(15, 118, 110, 0.35);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
 }
 
 .input-wrap {
@@ -271,115 +437,158 @@ button {
 
 .input-wrap em {
   position: absolute;
-  right: 10px;
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   font-style: normal;
   pointer-events: none;
 }
 
+/* --- 完美修复的 Apple 风格原生滑块 --- */
+.control-row input[type="range"] {
+  -webkit-appearance: auto;
+  appearance: auto;
+  width: 100%;
+  height: 24px;
+  margin: 6px 0;
+  padding: 0;
+  accent-color: var(--accent); /* 原生支持完美的颜色和左侧填充 */
+  cursor: pointer;
+  background: transparent;
+  outline: none;
+}
+.control-row input[type="range"]:active {
+  opacity: 0.8;
+}
+
+/* 动效 Checkbox */
 .toggle-row {
-  grid-template-columns: 18px 1fr;
+  grid-template-columns: 20px 1fr;
   align-items: center;
-  color: var(--ink);
+  margin-top: 18px;
+  cursor: pointer;
+  padding: 4px 0;
 }
-
 .toggle-row input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--teal);
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.2, 1.4, 0.5, 1);
+}
+.toggle-row:active input {
+  transform: scale(0.85);
 }
 
+/* --- 右侧工作区 --- */
 .workspace {
   display: grid;
-  gap: 14px;
+  gap: 24px;
+  min-width: 0; /* 核心防溢出 */
 }
 
-.workspace > *,
-#charts {
-  min-width: 0;
-}
-
+/* 警告条 */
 .warning-strip {
   display: grid;
   gap: 8px;
-  padding: 12px 14px;
-  border: 1px solid #f5c36c;
-  border-radius: 8px;
-  background: #fff7e6;
-  color: #7a4a00;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: #fff8e6;
+  border-left: 4px solid var(--amber);
+  color: #9e6400;
+  font-size: 13px;
+  font-weight: 500;
 }
 
+/* --- 数据指标卡片 (悬浮视差感) --- */
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(150px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(5, minmax(130px, 1fr));
+  gap: 16px;
 }
 
 .metric-card {
-  min-height: 116px;
+  position: relative;
+  min-height: 120px;
   display: grid;
   align-content: start;
-  gap: 8px;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  gap: 6px;
+  padding: 20px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(145deg, #ffffff 0%, #fbfbfd 100%);
+  border: 1px solid var(--line-light);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: var(--shadow-hover);
 }
 
 .metric-card span {
   color: var(--muted);
   font-size: 13px;
+  font-weight: 500;
 }
 
 .metric-card strong {
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 700;
   line-height: 1.2;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums; /* 数字等宽对齐 */
 }
 
 .metric-card em {
   color: var(--muted);
   font-size: 12px;
   font-style: normal;
+  margin-top: 4px;
 }
 
+/* --- iOS 分段控制器风格 Tabs --- */
 .tabs {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
+  display: inline-flex;
+  gap: 4px;
   padding: 4px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .tabs button {
   flex: 0 0 auto;
   min-height: 36px;
-  padding: 0 13px;
+  padding: 0 24px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 10px;
   background: transparent;
   color: var(--muted);
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .tabs button.is-active {
-  background: var(--surface-soft);
-  color: var(--teal);
-  font-weight: 700;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* --- 曲线筛选区 --- */
 .scenario-filter {
   display: grid;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  gap: 16px;
+  padding: 24px;
+  border-radius: var(--radius-xl);
   background: var(--surface);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--line-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .scenario-filter[hidden] {
@@ -387,446 +596,467 @@ button {
 }
 
 .scenario-filter-head {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.scenario-filter-head strong {
+  font-size: 16px;
 }
 
 .scenario-filter-head span {
   color: var(--muted);
   font-size: 13px;
+  margin-right: auto;
 }
 
 .scenario-filter-head div {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
-  justify-content: flex-end;
 }
 
 .scenario-checks {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 12px;
 }
 
 .scenario-checks label {
-  display: grid;
-  grid-template-columns: 18px 1fr;
-  gap: 8px;
-  align-items: start;
-  min-height: 38px;
-  padding: 9px 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid transparent;
   color: var(--ink);
   font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.scenario-checks input {
-  margin-top: 2px;
-  accent-color: var(--teal);
+.scenario-checks label:hover {
+  background: var(--surface-hover);
 }
-
-.chart-surface,
-.table-zone {
-  margin: 0;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
+.scenario-checks label:has(input:checked) {
   background: var(--surface);
-  box-shadow: var(--shadow);
+  border-color: rgba(0, 113, 227, 0.3);
+  box-shadow: 0 2px 12px rgba(0, 113, 227, 0.08);
+}
+
+/* --- 图表与表格区 (彻底解决边界溢出) --- */
+.chart-surface, .table-zone {
+  margin: 0;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  border: 1px solid var(--line-light);
+  box-shadow: var(--shadow-sm);
+  min-width: 0; /* 防溢出根基 */
+  max-width: 100%;
 }
 
 .empty-chart {
-  padding: 28px;
-  border: 1px dashed var(--line);
-  border-radius: 8px;
-  background: var(--surface);
+  padding: 60px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--bg);
   color: var(--muted);
   text-align: center;
+  font-weight: 500;
+  border: 1px dashed rgba(0,0,0,0.1);
 }
 
 .chart-surface {
   position: relative;
-  max-width: 100%;
-  overflow: visible;
-  touch-action: pan-x pan-y;
+  overflow: hidden; /* 防止图表溢出 */
 }
 
 .chart-scroll {
-  max-width: 100%;
+  width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  overscroll-behavior-x: contain;
-  scrollbar-width: thin;
-  contain: inline-size;
+  scrollbar-width: none; 
 }
 
-.chart-scroll svg,
-.chart-surface > svg {
+.chart-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.chart-scroll svg, .chart-surface > svg {
   display: block;
   width: 100%;
   min-width: 760px;
-  min-height: 300px;
+  min-height: 360px;
 }
 
+/* SVG 细节美化 */
 .chart-title {
   fill: var(--ink);
   font-size: 18px;
   font-weight: 700;
 }
-
-.chart-subtitle,
-.axis-labels,
-.legend-item,
-.bar-label,
-.bar-value {
+.chart-subtitle {
+  fill: var(--muted);
+  font-size: 13px;
+}
+.axis-labels, .legend-item, .bar-label {
   fill: var(--muted);
   font-size: 12px;
+  font-weight: 500;
 }
-
 .bar-value {
   fill: var(--ink);
+  font-weight: 600;
 }
-
 .grid-lines line {
-  stroke: #e8edf2;
+  stroke: var(--line);
+  stroke-dasharray: 4 4;
 }
-
 .axis {
-  stroke: #9aa7b4;
+  stroke: rgba(0,0,0,0.15);
   stroke-width: 1;
 }
-
 .zero-line {
   stroke: var(--rose);
   stroke-dasharray: 4 4;
 }
-
-.chart-line {
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.chart-hitbox {
-  fill: transparent;
-  pointer-events: all;
-  cursor: crosshair;
-}
-
 .chart-guide {
-  stroke: #334155;
+  stroke: var(--ink);
   stroke-width: 1;
   stroke-dasharray: 4 4;
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.chart-focus-layer {
-  pointer-events: none;
+  opacity: 0.2;
 }
 
 .chart-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 18px;
+  gap: 12px 20px;
   align-items: center;
-  min-height: 34px;
-  padding: 10px 0 0 2px;
-  color: var(--muted);
-  font-size: 14px;
-  border-top: 1px solid #edf1f5;
-}
-
-.chart-legend span,
-.chart-tooltip span {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.chart-legend i,
-.chart-tooltip i {
-  display: inline-block;
-  width: 22px;
-  height: 4px;
-  border-radius: 999px;
-  flex: 0 0 auto;
-}
-
-.composition-legend i {
-  width: 13px;
-  height: 13px;
-  border-radius: 3px;
-}
-
-.chart-tooltip {
-  position: absolute;
-  z-index: 4;
-  display: grid;
-  gap: 6px;
-  min-width: 178px;
-  max-width: min(280px, calc(100% - 16px));
-  padding: 10px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+  margin-top: 16px;
+  padding-top: 16px;
   color: var(--ink);
   font-size: 13px;
+  font-weight: 500;
+  border-top: 1px solid var(--line-light);
+}
+.chart-legend span, .chart-tooltip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-legend i, .chart-tooltip i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%; /* 圆形色块更高级 */
+}
+
+/* 现代 Tooltip 玻璃态 */
+.chart-tooltip {
+  position: absolute;
+  z-index: 10;
+  display: grid;
+  gap: 8px;
+  min-width: 200px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
   pointer-events: none;
+  transition: opacity 0.2s ease; /* 进出平滑 */
 }
-
 .chart-tooltip strong {
-  font-size: 14px;
+  font-size: 15px;
+  margin-bottom: 4px;
+  display: block;
 }
 
+/* --- 表格区域 (重点防溢出修复) --- */
 .table-zone {
   display: grid;
-  gap: 14px;
+  gap: 20px;
+  min-width: 0; /* Grid 容器必须设定该属性以允许子元素缩小 */
+}
+
+/* 修复子元素撑破 Grid 容器的核心规则 */
+.table-zone > * {
+  min-width: 0;
 }
 
 .table-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
 }
-
 .table-toolbar h2 {
   margin: 0;
   font-size: 18px;
+  font-weight: 600;
 }
-
 .table-toolbar select {
-  min-height: 36px;
-  max-width: 320px;
+  min-height: 40px;
+  max-width: 340px;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 0 10px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 0 36px 0 16px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
+/* 核心滚动容器修复：截断超出的宽度 */
 .table-scroll {
-  overflow: auto;
   width: 100%;
   max-width: 100%;
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  contain: inline-size;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-light);
+  background: var(--surface);
+  display: block; /* 保证其行为受限 */
 }
+/* 表格自定义滚动条 */
+.table-scroll::-webkit-scrollbar { height: 6px; }
+.table-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border: none; border-radius: 3px; }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 760px;
   font-size: 13px;
 }
 
-th,
-td {
-  padding: 10px 11px;
-  border-bottom: 1px solid var(--line);
-  text-align: right;
-  white-space: nowrap;
+/* 对于数据表，强制最小宽度以防挤压换行 */
+#summary-table table, #monthly-table table {
+  min-width: 960px; /* 让手机端可以直接横滑 */
 }
 
-th:first-child,
-td:first-child {
+th, td {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line-light);
+  text-align: right;
+  white-space: nowrap; /* 数据强制不换行 */
+  font-variant-numeric: tabular-nums; /* 数字等宽对齐 */
+}
+
+th:first-child, td:first-child {
   text-align: left;
 }
 
+/* 表头毛玻璃吸顶 */
 th {
+  background: rgba(250, 250, 252, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--muted);
+  font-weight: 600;
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #f1f5f9;
-  color: #334155;
-  font-weight: 700;
+  border-bottom: 1px solid var(--line);
 }
 
-tbody tr:nth-child(even) {
-  background: #fafbfc;
+tbody tr {
+  transition: background-color 0.2s;
+}
+tbody tr:hover {
+  background-color: var(--bg);
 }
 
+/* --- 手风琴明细 (动画与防溢出) --- */
 .detail-drawer {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 12px;
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius);
+  background: var(--surface);
+  min-width: 0; /* 防溢出 */
+  max-width: 100%;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .detail-drawer summary {
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 18px 20px;
+  outline: none;
+  background: var(--surface-soft);
+  transition: background 0.2s;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.detail-drawer summary::-webkit-details-marker {
+  display: none;
+}
+.detail-drawer summary::after {
+  content: "＋";
+  color: var(--accent);
+  transition: transform 0.3s;
+}
+.detail-drawer[open] summary::after {
+  transform: rotate(45deg);
 }
 
-.detail-drawer > div {
-  margin-top: 12px;
+.detail-drawer summary:hover {
+  background: var(--surface-hover);
 }
 
+/* 内部展开内容的动画 */
+.detail-drawer[open] > div {
+  animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0 20px 20px 20px;
+  min-width: 0;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 公式与长文本区防撑破 --- */
 .formula-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 16px;
+  margin-top: 16px;
+  margin-bottom: 20px;
+  min-width: 0;
 }
 
 .formula-grid p {
   margin: 0;
-  padding: 13px;
-  border-radius: 8px;
-  background: #f8fafc;
-  color: #344254;
-  line-height: 1.65;
-}
-
-a {
-  color: var(--blue);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  font-size: 13px;
+  /* 极致断行，彻底防止长文本撑破屏幕 */
+  word-wrap: break-word;
   overflow-wrap: anywhere;
+  white-space: normal;
 }
 
+/* 防止链接过长撑大表格 */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  word-break: break-all;
+  transition: opacity 0.2s;
+}
+a:hover {
+  opacity: 0.7;
+}
+
+/* 针对底部的公式与来源表格单独设置：允许换行以节省空间 */
 #formula-block table {
-  min-width: 0;
+  min-width: 100%;
   table-layout: fixed;
 }
-
-#formula-block th,
 #formula-block td {
   white-space: normal;
   overflow-wrap: anywhere;
+  word-wrap: break-word;
 }
 
-@media (max-width: 1180px) {
+/* --- 响应式适配 (Mobile First 考量) --- */
+@media (max-width: 1200px) {
   .app-shell {
     grid-template-columns: 1fr;
+    padding: 24px;
   }
-
   .control-panel {
     position: static;
-    max-height: none;
+    max-height: 3200px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 16px;
+    overflow: hidden;
   }
-
-  .metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .scenario-filter-head {
+  .app-shell.is-sidebar-collapsed {
     grid-template-columns: 1fr;
-    align-items: stretch;
+    gap: 18px;
   }
-
-  .scenario-filter-head div {
-    justify-content: flex-start;
+  .app-shell.is-sidebar-collapsed .control-panel {
+    max-height: 0;
+    opacity: 0;
+    transform: translate3d(0, -18px, 0) scale(0.99);
+    clip-path: inset(0 0 100% 0 round calc(var(--radius-xl) + 8px));
+    filter: blur(5px) saturate(0.94);
+    padding-top: 0;
+    padding-bottom: 0;
+    border-color: transparent;
+    box-shadow: none;
+    overflow: hidden;
   }
-
-  .scenario-checks {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .metric-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .topbar {
-    align-items: flex-start;
+    padding: 16px 20px;
     flex-direction: column;
-    padding: 18px;
+    align-items: flex-start;
+    gap: 16px;
   }
-
-  .app-shell {
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .control-panel,
-  .metric-grid,
-    .formula-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .scenario-checks {
-      grid-template-columns: 1fr;
-    }
-
-  .metric-grid {
-    gap: 10px;
-  }
-
   .topbar h1 {
-    font-size: 23px;
+    font-size: 20px;
   }
-
-  .topbar-meta,
-  .topbar-meta button {
-    width: 100%;
+  .app-shell {
+    padding: 12px;
+    gap: 16px;
   }
-
+  .control-panel, .metric-grid, .formula-grid, .scenario-checks {
+    grid-template-columns: 1fr;
+  }
+  .control-panel {
+    max-height: 5200px;
+    padding: 12px;
+    border-radius: 20px;
+  }
+  .app-shell.is-sidebar-collapsed .control-panel > * {
+    transform: translate3d(0, -8px, 0) scale(0.99);
+  }
   .topbar-meta {
     justify-content: stretch;
+    width: 100%;
   }
-
   .topbar-meta button {
-    flex: 1 1 120px;
+    flex: 1;
   }
-
-  .metric-card {
-    min-height: 94px;
+  /* 缩小卡片内边距 */
+  .panel-section, .chart-surface, .table-zone {
+    padding: 16px;
+    border-radius: 16px;
   }
-
-  .panel-section,
-  .chart-surface,
-  .table-zone {
-    padding: 12px;
-  }
-
-  .control-row {
-    gap: 8px;
-  }
-
-  .control-row input,
-  .control-row select {
-    min-height: 42px;
-  }
-
-  .control-row input[type="range"] {
-    min-height: 34px;
-  }
-
-  .chart-scroll svg,
-  .chart-surface > svg {
-    min-width: 720px;
-    min-height: 310px;
-  }
-
-  .chart-title {
-    font-size: 16px;
-  }
-
-  .chart-subtitle,
-  .axis-labels,
-  .legend-item,
-  .bar-label,
-  .bar-value {
-    font-size: 11px;
-  }
-
-  .chart-legend {
-    gap: 8px 14px;
-    font-size: 13px;
-  }
-
   .table-toolbar {
-    align-items: stretch;
     flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
-
   .table-toolbar select {
-    max-width: none;
+    max-width: 100%;
+  }
+  .tabs button {
+    padding: 0 16px;
+  }
+  .metric-card strong {
+    font-size: 20px;
   }
 }
-</style>
+  </style>
 </head>
 <body>
   <script type="application/json" id="default-config">{
@@ -1177,7 +1407,7 @@ a {
       },
       {
         "id": "F1",
-        "name": "IT之家：乐道 L60 限时 0 首付 3 年免息金融方案",
+        "name": "IT之家：乐道 L60 限时 0首付 3 年免息金融方案",
         "url": "https://www.ithome.com/0/829/150.htm"
       },
       {
@@ -1987,18 +2217,18 @@ function sum(values) {
 }
 
 
-const SERIES_COLORS = ["#0f766e", "#2563eb", "#b45309", "#be123c", "#6d28d9", "#0f172a"];
+const SERIES_COLORS = ["#0071e3", "#1d1d1f", "#ff3b30", "#f59e0b", "#34c759", "#86868b"];
 const COMPONENT_COLORS = {
-  vehicleCost: "#0f766e",
-  loanPayment: "#0ea5e9",
-  tax: "#2563eb",
-  insurance: "#7c3aed",
-  rent: "#d97706",
-  buyout: "#be123c",
-  energy: "#0891b2",
-  subsidy: "#16a34a",
-  pointRebate: "#65a30d",
-  investmentGain: "#475569"
+  vehicleCost: "#1d1d1f",
+  loanPayment: "#0071e3",
+  tax: "#5ac8fa",
+  insurance: "#af52de",
+  rent: "#ff9500",
+  buyout: "#ff3b30",
+  energy: "#34c759",
+  subsidy: "#8e8e93",
+  pointRebate: "#c7c7cc",
+  investmentGain: "#aeaeb2"
 };
 
 function renderLineChart({ title, subtitle = "", series, yFormatter = formatWan, zeroLine = false }) {
@@ -2072,7 +2302,7 @@ function renderLineChart({ title, subtitle = "", series, yFormatter = formatWan,
       <line class="axis" x1="${margin.left}" x2="${width - margin.right}" y1="${height - margin.bottom}" y2="${height - margin.bottom}"></line>
       <line class="axis" x1="${margin.left}" x2="${margin.left}" y1="${margin.top}" y2="${height - margin.bottom}"></line>
       ${lines}
-      <rect class="chart-hitbox" x="${margin.left}" y="${margin.top}" width="${plotWidth}" height="${plotHeight}"></rect>
+      <rect class="chart-hitbox" x="${margin.left}" y="${margin.top}" width="${plotWidth}" height="${plotHeight}" fill="transparent" pointer-events="all"></rect>
     </svg>
     </div>
     <figcaption class="chart-legend">${legend}</figcaption>
@@ -2089,7 +2319,7 @@ function renderBuyoutCurve(cfg, calcBuyoutDue) {
   return renderLineChart({
     title: "买断应付金额曲线",
     subtitle: `第 ${cfg.creditStartMonth}-${cfg.creditEndMonth} 月抵扣，默认每月 ${cfg.creditPerMonth} 元`,
-    series: [{ name: "买断应付", values, color: "#be123c" }],
+    series: [{ name: "买断应付", values, color: "var(--rose)" }],
     yFormatter: formatWan
   });
 }
@@ -2227,6 +2457,7 @@ function enhanceLineChartTooltips(scope = document) {
       guide.setAttribute("x1", x);
       guide.setAttribute("x2", x);
       tooltip.hidden = false;
+      tooltip.style.opacity = 1;
       tooltip.innerHTML = `<strong>第 ${month} 月</strong>${rows.map((row) => (
         `<span><i style="background:${row.color}"></i>${escapeChartHtml(row.name)}：${formatYuan(row.value)}</span>`
       )).join("")}`;
@@ -2245,7 +2476,8 @@ function enhanceLineChartTooltips(scope = document) {
     const leave = () => {
       guide.setAttribute("hidden", "");
       focusLayer.setAttribute("hidden", "");
-      tooltip.hidden = true;
+      tooltip.style.opacity = 0;
+      setTimeout(() => { if (tooltip.style.opacity == 0) tooltip.hidden = true; }, 200);
     };
 
     hitbox.addEventListener("pointermove", move);
@@ -2346,9 +2578,6 @@ function scaleY(payload, value) {
   return payload.margin.top + (1 - (value - payload.yMin) / (payload.yMax - payload.yMin)) * plotHeight;
 }
 
-
-
-
 const DEFAULT_CONFIG = JSON.parse(document.getElementById("default-config").textContent);
 const MODEL_PROFILES = JSON.parse(document.getElementById("model-profiles")?.textContent || "[]");
 const root = document.getElementById("app");
@@ -2357,10 +2586,13 @@ let currentProfileId = cfg.profileId || DEFAULT_CONFIG.profileId || "onvo_l60_60
 let activeChart = "cost";
 let activeTableScenario = "S0";
 let visibleScenarioIds = new Set(SCENARIOS.map((scenario) => scenario.scenarioId));
+let controlsCollapsed = false;
+let controlPanelMotionTimer = null;
 
 renderShell();
 renderModelSelector();
 bindEvents();
+updateControlPanelState({ animate: false });
 syncControls();
 recalculate();
 
@@ -2374,6 +2606,7 @@ function renderShell() {
       <div class="topbar-meta">
         <span id="current-model-label">${escapeHtml(cfg.modelName)}</span>
         <span id="data-version-label">数据核验 ${escapeHtml(cfg.dataVersion)}</span>
+        <button type="button" class="ghost-button control-toggle" id="toggle-controls" aria-expanded="true">收起参数</button>
         <button type="button" class="ghost-button" id="export-json">导出 JSON</button>
         <button type="button" class="ghost-button" id="export-csv">导出 CSV</button>
         <button type="button" class="primary-button" id="reset-config">重置参数</button>
@@ -2439,16 +2672,18 @@ function renderShell() {
         </section>
         <details class="panel-section" open>
           <summary>高级参数</summary>
-          ${checkboxControl("启用租金优惠", "rentPromotion.useRentPromotion")}
-          ${numberControl("周期内付费月", "rentPromotion.paidMonthsPerCycle", 0, 12, 1, "月")}
-          ${numberControl("优惠周期", "rentPromotion.cycleMonths", 1, 12, 1, "月")}
-          ${checkboxControl("抵扣只按付费账单", "rentPromotion.creditOnlyPaidBills")}
-          ${checkboxControl("纳入补能成本", "energy.includeEnergyCost")}
-          ${numberControl("年行驶里程", "energy.annualMileageKm", 0, 50000, 500, "km")}
-          ${numberControl("百公里电耗", "energy.energyKWhPer100km", 0, 30, 0.1, "kWh")}
-          ${numberControl("电价", "energy.electricityPrice", 0, 3, 0.01, "元/kWh")}
-          ${checkboxControl("纳入期末残值", "resale.includeResaleValue")}
-          ${numberControl("期末残值", "resale.resaleValueYuan", 0, 300000, 1000, "元")}
+          <div>
+            ${checkboxControl("启用租金优惠", "rentPromotion.useRentPromotion")}
+            ${numberControl("周期内付费月", "rentPromotion.paidMonthsPerCycle", 0, 12, 1, "月")}
+            ${numberControl("优惠周期", "rentPromotion.cycleMonths", 1, 12, 1, "月")}
+            ${checkboxControl("抵扣只按付费账单", "rentPromotion.creditOnlyPaidBills")}
+            ${checkboxControl("纳入补能成本", "energy.includeEnergyCost")}
+            ${numberControl("年行驶里程", "energy.annualMileageKm", 0, 50000, 500, "km")}
+            ${numberControl("百公里电耗", "energy.energyKWhPer100km", 0, 30, 0.1, "kWh")}
+            ${numberControl("电价", "energy.electricityPrice", 0, 3, 0.01, "元/kWh")}
+            ${checkboxControl("纳入期末残值", "resale.includeResaleValue")}
+            ${numberControl("期末残值", "resale.resaleValueYuan", 0, 300000, 1000, "元")}
+          </div>
         </details>
       </aside>
       <section class="workspace">
@@ -2520,6 +2755,10 @@ function bindEvents() {
       updateTabState();
       recalculate();
     }
+    if (event.target.id === "toggle-controls") {
+      controlsCollapsed = !controlsCollapsed;
+      updateControlPanelState();
+    }
     if (event.target.id === "reset-config") {
       cfg = cloneConfig(getCurrentProfile());
       activeTableScenario = "S0";
@@ -2569,6 +2808,26 @@ function recalculate() {
 function updateHeaderMeta(currentCfg) {
   document.getElementById("current-model-label").textContent = currentCfg.modelName || "";
   document.getElementById("data-version-label").textContent = `数据核验 ${currentCfg.dataVersion || ""}`;
+}
+
+function updateControlPanelState(options = {}) {
+  const { animate = true } = options;
+  const shell = document.querySelector(".app-shell");
+  const button = document.getElementById("toggle-controls");
+  if (!shell || !button) return;
+  if (animate) {
+    shell.classList.remove("is-sidebar-collapsing", "is-sidebar-expanding");
+    void shell.offsetWidth;
+    shell.classList.add(controlsCollapsed ? "is-sidebar-collapsing" : "is-sidebar-expanding");
+    clearTimeout(controlPanelMotionTimer);
+    controlPanelMotionTimer = setTimeout(() => {
+      shell.classList.remove("is-sidebar-collapsing", "is-sidebar-expanding");
+    }, 760);
+  }
+  shell.classList.toggle("is-sidebar-collapsed", controlsCollapsed);
+  button.textContent = controlsCollapsed ? "展开参数" : "收起参数";
+  button.setAttribute("aria-expanded", String(!controlsCollapsed));
+  button.title = controlsCollapsed ? "展开参数配置面板" : "收起参数配置面板";
 }
 
 function renderModelSelector() {
@@ -2769,7 +3028,7 @@ function renderFormulaBlock(currentCfg) {
   const sourceRows = (currentCfg.sources || []).map((source) => [
     source.id,
     source.name,
-    `<a href="${escapeAttr(source.url)}">${escapeHtml(source.url)}</a>`
+    `<a href="${escapeAttr(source.url)}" target="_blank">${escapeHtml(source.url)}</a>`
   ]);
   document.getElementById("formula-block").innerHTML = `
     <div class="formula-grid">
